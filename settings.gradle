@@ -1,4 +1,4 @@
-rootProject.name = "TimeCatModuleTemplate"
+rootProject.name = "TimeCatModule-AVG"
 
 apply from: "context.gradle"
 
