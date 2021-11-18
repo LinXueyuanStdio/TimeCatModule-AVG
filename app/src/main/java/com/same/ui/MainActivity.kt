@@ -19,6 +19,7 @@ class MainActivity : Activity() {
         linearLayout.orientation = LinearLayout.VERTICAL
         linearLayout.addView(createButton("run") {
             val s = StoryScript(this)
+            s.onCreate()
             val result = s.parse("@name tag")
             LogUtil.e(result)
         })

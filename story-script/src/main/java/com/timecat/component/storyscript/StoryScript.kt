@@ -1,7 +1,6 @@
 package com.timecat.component.storyscript
 
 import android.content.Context
-import com.alibaba.fastjson.JSONObject
 import com.timecat.component.engine.js.Bridge
 import com.timecat.component.engine.js.HermesRuntime
 import java.io.IOException
@@ -21,17 +20,20 @@ class StoryScript(val context: Context) {
 
     fun onCreate() {
         bridge.initialize(jsRuntime)
-        bridge.loadScriptFromAssets(context.assets, "assets://story/story.min.js")
-        bridge.loadScriptFromAssets(context.assets, "assets://story/app.js")
+        context.loadJSTemplateFromAssets("story/index.min.js")?.let {
+            bridge.loadScriptFromString(it)
+        }
+        context.loadJSTemplateFromAssets("story/app.js")?.let {
+            bridge.loadScriptFromString(it)
+        }
     }
 
-    fun evalSync(functionName: String, args: Any? = null): Any {
+    fun evalSync(functionName: String, args: Any? = null): Any? {
         return bridge.callJSFunctionSync(functionName, args)
     }
 
-    fun parse(script: String): JSONObject? {
-        val obj = evalSync("parseScriptSync", script)
-        return StoryParser.parse(obj)
+    fun parse(script: String): Any? {
+        return evalSync("parseScriptSync", script)
     }
 
     fun onDestroy() {
