@@ -11,15 +11,14 @@ import com.alibaba.fastjson.JSONObject
  * @usage null
  */
 object StoryParser {
-    fun parse(storyAst: String): JSONObject? {
-        val ast: JSONObject = JSON.parse(storyAst) as? JSONObject ?: return null
-//        if (ast is Map<*, *>) {
-//            val map = ast as Map<*, *>
-//            for (key in map.keys) {
-//                val value = map[key]
-//                LogUtil.sd("key:$key,value:$value")
-//            }
-//        }
-        return ast
+    fun parse(storyAst: Any): JSONObject? {
+        if (storyAst is Map<*, *>) {
+            val obj = JSONObject(storyAst as? Map<String, Any>)
+            return obj
+        } else if (storyAst is String) {
+            val ast: JSONObject = JSON.parse(storyAst) as? JSONObject ?: return null
+            return ast
+        }
+        return null
     }
 }

@@ -18,7 +18,6 @@ internal class StoryScriptTest {
     val script = StoryScript()
     @BeforeEach
     fun setUp() {
-        script.engine
     }
 
     fun parse(text: String): JSONObject? {

@@ -1,6 +1,7 @@
 package com.timecat.component.storyscript
 
 import android.content.Context
+import com.alibaba.fastjson.JSONObject
 import com.timecat.component.engine.js.Bridge
 import com.timecat.component.engine.js.HermesRuntime
 import java.io.IOException
@@ -28,10 +29,9 @@ class StoryScript(val context: Context) {
         return bridge.callJSFunctionSync(functionName, args)
     }
 
-    fun parse(script: String) {
+    fun parse(script: String): JSONObject? {
         val obj = evalSync("parseScriptSync", script)
-
-        StoryParser.parse(script)
+        return StoryParser.parse(obj)
     }
 
     fun onDestroy() {
