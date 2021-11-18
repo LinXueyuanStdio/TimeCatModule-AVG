@@ -8,15 +8,29 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
+import com.timecat.component.commonsdk.utils.override.LogUtil
+import com.timecat.component.storyscript.StoryScript
 import com.xiaojinzi.component.impl.*
+import javax.script.SimpleBindings
 
 class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val linearLayout = LinearLayout(this)
         linearLayout.orientation = LinearLayout.VERTICAL
-        linearLayout.addView(createButton("登录") {
-
+        linearLayout.addView(createButton("run") {
+            val s = StoryScript()
+            val e = s.engine
+            val f1 = resources.assets.open("ohm.js")
+            val f2 = resources.assets.open("StoryScript.js")
+            val f3 = resources.assets.open("app.js")
+            e.eval(f1.reader())
+            e.eval(f2.reader())
+            e.eval(f3.reader())
+            val b = SimpleBindings()
+            b["scriptString"] = "@name tag"
+            val result = e.eval("parseScriptSync", b)
+            LogUtil.e(result)
         })
         setContentView(linearLayout)
     }

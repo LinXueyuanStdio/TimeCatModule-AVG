@@ -1,5 +1,9 @@
 package com.timecat.component.storyscript
 
+import javax.script.ScriptEngine
+import javax.script.ScriptEngineManager
+
+
 /**
  * @author 林学渊
  * @email linxy59@mail2.sysu.edu.cn
@@ -8,4 +12,9 @@ package com.timecat.component.storyscript
  * @usage null
  */
 class StoryScript {
+    val engine: ScriptEngine = ScriptEngineManager().getEngineByName("rhino")
+
+    init {
+        val ctx = engine.context
+    }
 }
