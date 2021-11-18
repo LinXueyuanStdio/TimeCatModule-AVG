@@ -15,12 +15,25 @@ import com.xiaojinzi.component.impl.*
 class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        LogUtil.DEBUG = true
+        LogUtil.OPEN_LOG = true
         val linearLayout = LinearLayout(this)
         linearLayout.orientation = LinearLayout.VERTICAL
+        val s = StoryScript(this)
+        s.onCreate()
         linearLayout.addView(createButton("run") {
-            val s = StoryScript(this)
-            s.onCreate()
             val result = s.parse("@name tag")
+            LogUtil.e(result)
+        })
+        linearLayout.addView(createButton("run2") {
+            val result = s.parse("""
+                #while x > 1 + 1 && ((x == 'test' || y >= 30) && a) || (b + 2) * -10
+                [name]
+                这是一句话，哈哈~！
+                [name flagB]
+                Some words!
+                #end
+            """)
             LogUtil.e(result)
         })
         setContentView(linearLayout)
