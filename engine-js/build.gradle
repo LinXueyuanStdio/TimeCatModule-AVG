@@ -1,0 +1,78 @@
+apply from: "${project.rootDir}/gradle/library_header.gradle"
+
+def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
+
+task createNativeDepsDirectories {
+    thirdPartyNdkDir.mkdirs()
+}
+
+task prepareHermes(dependsOn: createNativeDepsDirectories) {
+    def hermesAAR = file("$projectDir/../node_modules/hermes-engine/android/hermes-debug.aar")
+    if (!hermesAAR.exists()) {
+        // For an app to build from RN source, hermes-engine is located at /path/to/app/node_modules
+        // and $projectDir is located at /path/to/app/node_modules/react-native/ReactAndroid
+        hermesAAR = file("$projectDir/../../hermes-engine/android/hermes-debug.aar")
+
+        if (!hermesAAR.exists()) {
+            // At Facebook, this file is in a different folder
+            hermesAAR = file("$projectDir/../../node_modules/hermes-engine/android/hermes-debug.aar")
+        }
+    }
+    def soFiles = zipTree(hermesAAR).matching({ it.include "**/*.so" })
+
+    copy {
+        from soFiles
+        into "$thirdPartyNdkDir/hermes"
+    }
+}
+
+android {
+    ndkVersion "21.3.6528147"
+
+    defaultConfig {
+        externalNativeBuild {
+            cmake {
+                // On embedder side pointer compression is DISABLED while on V8 side it's ENABLED
+                arguments '-DANDROID_STL=c++_shared'
+                cppFlags "-frtti -fexceptions"
+            }
+            ndk {
+                abiFilters "armeabi-v7a", "arm64-v8a"
+            }
+        }
+    }
+
+    sourceSets.main {
+//        jniLibs {
+//            srcDirs = ["$buildDir/third-party-ndk/hermes/jni"]
+//        }
+        java {
+            srcDirs = ["src/main/java"]
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.10.2"
+        }
+    }
+
+    packagingOptions {
+        exclude '**/libfb.so'
+        doNotStrip "*/arm64-v8a/*.so"
+        doNotStrip "*/armeabi-v7a/*.so"
+    }
+}
+
+dependencies {
+    api fileTree(dir: 'libs', include: ['*.jar'])
+    api 'androidx.appcompat:appcompat:1.2.0'
+    api 'com.facebook:jni:1.0.0'
+}
+
+afterEvaluate {
+    tasks.getByName("assembleRelease").dependsOn([prepareHermes])
+}
+
+apply from: "${project.rootDir}/gradle/library_tail.gradle"

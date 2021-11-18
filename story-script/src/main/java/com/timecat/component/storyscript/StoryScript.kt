@@ -1,8 +1,11 @@
 package com.timecat.component.storyscript
 
-import javax.script.ScriptEngine
-import javax.script.ScriptEngineManager
-
+import android.content.Context
+import com.timecat.component.engine.js.Bridge
+import com.timecat.component.engine.js.HermesRuntime
+import java.io.IOException
+import java.io.InputStream
+import java.nio.charset.Charset
 
 /**
  * @author 林学渊
@@ -11,10 +14,43 @@ import javax.script.ScriptEngineManager
  * @description null
  * @usage null
  */
-class StoryScript {
-    val engine: ScriptEngine = ScriptEngineManager().getEngineByName("rhino")
+class StoryScript(val context: Context) {
+    val bridge by lazy { Bridge() }
+    val jsRuntime by lazy { HermesRuntime() }
 
-    init {
-        val ctx = engine.context
+    fun onCreate() {
+        bridge.initialize(jsRuntime)
+        bridge.loadScriptFromAssets(context.assets, "assets://story/story.min.js")
+        bridge.loadScriptFromAssets(context.assets, "assets://story/app.js")
     }
+
+    fun evalSync(functionName: String, args: Any? = null): Any {
+        return bridge.callJSFunctionSync(functionName, args)
+    }
+
+    fun parse(script: String) {
+        val obj = evalSync("parseScriptSync", script)
+
+        StoryParser.parse(script)
+    }
+
+    fun onDestroy() {
+        bridge.destroy()
+        jsRuntime.close()
+    }
+}
+
+fun Context.loadJSTemplateFromAssets(filename: String): String? {
+    var js: String? = null
+    try {
+        val `is`: InputStream = getAssets().open(filename)
+        val size = `is`.available()
+        val buffer = ByteArray(size)
+        `is`.read(buffer)
+        `is`.close()
+        js = String(buffer, Charset.defaultCharset())
+    } catch (ex: IOException) {
+        ex.printStackTrace()
+    }
+    return js
 }

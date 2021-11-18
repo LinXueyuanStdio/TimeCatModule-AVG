@@ -3,5 +3,7 @@ rootProject.name = "TimeCatModule-AVG"
 apply from: "context.gradle"
 
 include ':app'
+include ':engine-js'
+include ':fbjni'
 include ':module-vge'
 include ':story-script'

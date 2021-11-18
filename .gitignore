@@ -86,3 +86,5 @@ lint/tmp/
 
 .idea
 RouterDocument/
+package-lock.json
+node_modules/
