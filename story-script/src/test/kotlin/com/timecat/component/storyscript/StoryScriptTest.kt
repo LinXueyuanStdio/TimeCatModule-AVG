@@ -15,13 +15,11 @@ import org.junit.jupiter.api.Test
  * @usage null
  */
 internal class StoryScriptTest {
-    val script = StoryScript()
     @BeforeEach
     fun setUp() {
     }
 
     fun parse(text: String): JSONObject? {
-        script.engine.eval(text)
         val scriptString = text
         """
             //import Story from 'avg-storyscript';

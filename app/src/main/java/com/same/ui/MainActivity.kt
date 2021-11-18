@@ -13,29 +13,41 @@ import com.timecat.component.storyscript.StoryScript
 import com.xiaojinzi.component.impl.*
 
 class MainActivity : Activity() {
+    val script by lazy {
+        StoryScript(this).also {
+            it.onCreate()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         LogUtil.DEBUG = true
         LogUtil.OPEN_LOG = true
         val linearLayout = LinearLayout(this)
         linearLayout.orientation = LinearLayout.VERTICAL
-        val s = StoryScript(this)
-        s.onCreate()
         linearLayout.addView(createButton("run") {
-            val result = s.parse("@name tag")
+            val result = script.parse("@name tag")
             LogUtil.e(result)
         })
         linearLayout.addView(createButton("run2") {
-            val result = s.parse("""
+            val result = script.parse(
+                """
                 #while x > 1 + 1 && ((x == 'test' || y >= 30) && a) || (b + 2) * -10
                 [name]
                 这是一句话，哈哈~！
                 [name flagB]
                 Some words!
                 #end
-            """)
+            """
+            )
             LogUtil.e(result)
         })
+        // 2021-11-18 22:51:32.889 5244-5244/com.timecat.fake.avg E/TimeCat: ┆ Thread:main - 2 - @lxy  - MainActivity.onCreate$lambda-0 (MainActivity.kt:26)
+        // ┆ {CURRENTBLOCK={data=[{flags=[tag], type=content, params={}, command=name}], done=false, currentLine=0.0}, BLOCKSTACK=[]}
+        // └──────────────────────────────────────────────────────────────────────────
+        // 2021-11-18 22:51:34.628 5244-5244/com.timecat.fake.avg E/TimeCat: ┆ Thread:main - 2 - @lxy  - MainActivity.onCreate$lambda-1 (MainActivity.kt:37)
+        // ┆ {CURRENTBLOCK={data=[{condition={type=expression, value={left={type=expression, value={left={prefix=null, type=variable, value=x}, right={type=expression, value={left={type=value, value=1.0}, right={type=value, value=1.0}, operator=+}}, operator=>}}, right={type=expression, value={left={type=expression, value={left={type=expression, value={left={type=expression, value={left={prefix=null, type=variable, value=x}, right={type=value, value=test}, operator===}}, right={type=expression, value={left={prefix=null, type=variable, value=y}, right={type=value, value=30.0}, operator=>=}}, operator=||}}, right={prefix=null, type=variable, value=a}, operator=&&}}, right={type=expression, value={left={type=expression, value={left={prefix=null, type=variable, value=b}, right={type=value, value=2.0}, operator=+}}, right={type=expression, value={left={type=value, value=0.0}, right={type=value, value=10.0}, operator=-}}, operator=*}}, operator=||}}, operator=&&}}, name=while, block=[{flags=[], type=content, params={}, command=name}, {flags=[], type=content, params={raw={type=value, value=这是一句话，哈哈~！}}, command=*}, {flags=[flagB], type=content, params={}, command=name}, {flags=[], type=content, params={raw={type=value, value=Some words!}}, command=*}], type=logic}], done=false, currentLine=0.0}, BLOCKSTACK=[]}
+        // └──────────────────────────────────────────────────────────────────────────
         setContentView(linearLayout)
     }
 
