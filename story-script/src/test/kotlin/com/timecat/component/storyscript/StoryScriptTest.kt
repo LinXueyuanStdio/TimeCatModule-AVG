@@ -45,14 +45,13 @@ internal class StoryScriptTest {
     fun textContentScript() {
         print("parse script starts with `@`")
         assert(
-            "@name flag" runEq """
-            [{
-                        type: 'content',
-                        command: 'name',
-                        flags: ['flag'],
-                        params: {}
-                    }]
-        """
+            "@name flag" runEq """[{
+                type: 'content',
+                command: 'name',
+                flags: ['flag'],
+                params: {}
+            }]
+            """
         )
         print("parse script wrapped with `[]`")
         assert(
