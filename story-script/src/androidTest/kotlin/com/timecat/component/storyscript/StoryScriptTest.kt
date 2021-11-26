@@ -2,12 +2,13 @@ package com.timecat.component.storyscript
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.alibaba.fastjson.JSON
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 
 
 /**
@@ -17,16 +18,17 @@ import org.junit.Test
  * @description null
  * @usage null
  */
+@RunWith(AndroidJUnit4::class)
 class StoryScriptTest {
-    lateinit var script: StoryScript
-    val context = ApplicationProvider.getApplicationContext<Context>()
+    val script: StoryScript by lazy {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        StoryScript(context).also {
+            it.onCreate()
+        }
+    }
 
     @Before
     fun setUp() {
-        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        script = StoryScript(appContext).also {
-            it.onCreate()
-        }
     }
 
     fun parse(text: String): JSONObject? {
