@@ -5,5 +5,6 @@ apply from: "context.gradle"
 include ':app'
 include ':engine-js'
 include ':fbjni'
+include ':middle-engine'
 include ':module-vge'
 include ':story-script'

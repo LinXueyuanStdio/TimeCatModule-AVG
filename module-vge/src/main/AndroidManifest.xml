@@ -3,6 +3,7 @@
     package="com.timecat.module.vge">
 
     <application>
+        <activity android:name=".page.VgeActivity" />
     </application>
 
 </manifest>

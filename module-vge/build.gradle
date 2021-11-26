@@ -20,6 +20,7 @@ dependencies {
     api rootProject.ext.timecat["middle-setting"]
     api rootProject.ext.timecat["middle-block"]
 
+    api project(":middle-engine")
     api project(":story-script")
 }
 
