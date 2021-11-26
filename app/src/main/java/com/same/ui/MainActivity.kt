@@ -27,6 +27,7 @@ class MainActivity : Activity() {
         linearLayout.orientation = LinearLayout.VERTICAL
         linearLayout.addView(createButton("run") {
             val result = script.parse("@name tag")
+            LogUtil.e(result?.let { it::class.java })
             LogUtil.e(result)
         })
         linearLayout.addView(createButton("run2") {
@@ -49,6 +50,11 @@ class MainActivity : Activity() {
         // ┆ {CURRENTBLOCK={data=[{condition={type=expression, value={left={type=expression, value={left={prefix=null, type=variable, value=x}, right={type=expression, value={left={type=value, value=1.0}, right={type=value, value=1.0}, operator=+}}, operator=>}}, right={type=expression, value={left={type=expression, value={left={type=expression, value={left={type=expression, value={left={prefix=null, type=variable, value=x}, right={type=value, value=test}, operator===}}, right={type=expression, value={left={prefix=null, type=variable, value=y}, right={type=value, value=30.0}, operator=>=}}, operator=||}}, right={prefix=null, type=variable, value=a}, operator=&&}}, right={type=expression, value={left={type=expression, value={left={prefix=null, type=variable, value=b}, right={type=value, value=2.0}, operator=+}}, right={type=expression, value={left={type=value, value=0.0}, right={type=value, value=10.0}, operator=-}}, operator=*}}, operator=||}}, operator=&&}}, name=while, block=[{flags=[], type=content, params={}, command=name}, {flags=[], type=content, params={raw={type=value, value=这是一句话，哈哈~！}}, command=*}, {flags=[flagB], type=content, params={}, command=name}, {flags=[], type=content, params={raw={type=value, value=Some words!}}, command=*}], type=logic}], done=false, currentLine=0.0}, BLOCKSTACK=[]}
         // └──────────────────────────────────────────────────────────────────────────
         setContentView(linearLayout)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        script.onDestroy()
     }
 
     private fun createButton(name: String, path: String): Button {

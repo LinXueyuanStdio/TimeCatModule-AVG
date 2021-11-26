@@ -1,37 +1,40 @@
 package com.timecat.component.storyscript
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.alibaba.fastjson.JSON
 import org.json.JSONObject
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
 
+import org.junit.Assert.*
+import org.junit.runner.RunWith
 
 /**
  * @author 林学渊
  * @email linxy59@mail2.sysu.edu.cn
- * @date 2021/11/18
+ * @date 2021/11/26
  * @description null
  * @usage null
  */
-internal class StoryScriptTest {
-    @BeforeEach
+@RunWith(AndroidJUnit4::class)
+class StoryScriptTest2 {
+    lateinit var script: StoryScript
+    val context = ApplicationProvider.getApplicationContext<Context>()
+
+    @Before
     fun setUp() {
+        script = StoryScript(context).also {
+            it.onCreate()
+        }
     }
 
     fun parse(text: String): JSONObject? {
-        val scriptString = text
-        """
-            //import Story from 'avg-storyscript';
-            function parseScript(scriptString) {
-                const story = new StoryScript();
-                story.load(scriptString);
-                for (const line of story) {
-                    //do something
-                }
-                return story;
-            }
-        """.trimIndent()
+        val obj = script.parse(text)
+        print(obj?.let { it::class })
+        print(obj)
         return null
     }
 
@@ -44,7 +47,7 @@ internal class StoryScriptTest {
     @Test
     fun textContentScript() {
         print("parse script starts with `@`")
-        assert(
+        assertTrue(
             "@name flag" runEq """[{
                 type: 'content',
                 command: 'name',
@@ -54,7 +57,7 @@ internal class StoryScriptTest {
             """
         )
         print("parse script wrapped with `[]`")
-        assert(
+        assertTrue(
             "[name flag]" runEq """[{
                 type: 'content',
                 command: 'name',
@@ -63,7 +66,7 @@ internal class StoryScriptTest {
             }]"""
         )
         print("parse no parameter")
-        assert(
+        assertTrue(
             "[name]" runEq """[{
                 type: 'content',
                 command: 'name',
@@ -72,7 +75,7 @@ internal class StoryScriptTest {
             }]"""
         )
         print("parse parameter value of ascii string")
-        assert(
+        assertTrue(
             "[name param=\"string\"]" runEq """[{
                 type: 'content',
                 command: 'name',
@@ -81,7 +84,7 @@ internal class StoryScriptTest {
             }]"""
         )
         print("parse parameter value of non-ascii string")
-        assert(
+        assertTrue(
             "[name param=\"中文测试,日本語の分析テスト\" param2=\'中a文s\\测**|/试%……%\']" runEq """[{
                 type: 'content',
                 command: 'name',
@@ -93,7 +96,7 @@ internal class StoryScriptTest {
             }]"""
         )
         print("parse parameter value of number")
-        assert(
+        assertTrue(
             "[name param1=123 param2=00123 param3=0x123 param4=-10 param5=+0x20 param6=10.02 param7=.4]" runEq """[{
                 type: 'content',
                 command: 'name',
@@ -110,7 +113,7 @@ internal class StoryScriptTest {
             }]"""
         )
         print("parse parameter value of boolean")
-        assert(
+        assertTrue(
             "[name param=true param2=false]" runEq """[{
                 type: 'content',
                 command: 'name',
@@ -122,7 +125,7 @@ internal class StoryScriptTest {
             }]"""
         )
         print("parse parameter value of null")
-        assert(
+        assertTrue(
             "[name param=null param2=false]" runEq """[{
                 type: 'content',
                 command: 'name',
@@ -134,7 +137,7 @@ internal class StoryScriptTest {
             }]"""
         )
         print("parse parameter value of array")
-        assert(
+        assertTrue(
             "[name param1=[1,2,null,4] param2=[1,false,\"test\",[1,2,null]]]" runEq """[{
                 type: 'content',
                 command: 'name',
@@ -158,7 +161,7 @@ internal class StoryScriptTest {
 
 
         print("parse multi lines")
-        assert(
+        assertTrue(
             """
             [name param=123]
             [name flag]
@@ -173,7 +176,7 @@ internal class StoryScriptTest {
     fun testLogicScript() {
         print("parse IF-ELSEIF-ELSE")
 
-        assert(
+        assertTrue(
             """
             #if x > 1
             [name flagA]
@@ -201,7 +204,7 @@ internal class StoryScriptTest {
             ]"""
         )
         print("parse WHILE")
-        assert(
+        assertTrue(
             """
             [name flagA]
             #while x > 1
@@ -226,7 +229,7 @@ internal class StoryScriptTest {
             ]"""
         )
         print("parse FOREACH")
-        assert(
+        assertTrue(
             """
             [name flagA]
             #foreach child in children
@@ -245,7 +248,7 @@ internal class StoryScriptTest {
             ]"""
         )
         print("parse LET")
-        assert(
+        assertTrue(
             """
             [name flagA]
             #let variable = "123"
@@ -284,7 +287,7 @@ internal class StoryScriptTest {
         )
 
         print("parse computation")
-        assert(
+        assertTrue(
             """#let x = 1 - 22.3 + 4""" runEq """[{
                 type: "logic",
                 name: "let",
@@ -320,7 +323,7 @@ internal class StoryScriptTest {
                 }
             }]"""
         )
-        assert(
+        assertTrue(
             """#let x = 1 + 2 * 3 + 4 % 2""" runEq """[
                 {
                     type: "logic",
@@ -364,7 +367,7 @@ internal class StoryScriptTest {
             ]"""
         )
         print("parse complex logic expression")
-        assert(
+        assertTrue(
             """
             #while x > 1 + 1 && ((x == 'test' || y >= 30) && a) || (b + 2) * -10
             [name]
@@ -464,7 +467,8 @@ internal class StoryScriptTest {
         )
     }
 
-    @AfterEach
+    @After
     fun tearDown() {
+        script.onDestroy()
     }
 }
