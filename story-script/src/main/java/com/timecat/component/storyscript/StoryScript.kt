@@ -14,7 +14,10 @@ import java.nio.charset.Charset
  * @description null
  * @usage null
  */
-class StoryScript(val context: Context) {
+class StoryScript(
+    val context: Context,
+    val handleGlobalChanged: IScript,
+) {
     val bridge by lazy { Bridge() }
     val jsRuntime by lazy { HermesRuntime() }
 
@@ -33,26 +36,31 @@ class StoryScript(val context: Context) {
     }
 
     fun parse(script: String): Any? {
-        return evalSync("parseScriptSync", script)
+        return evalSync("StoryParser", script)
+    }
+
+    fun onStoryScriptCreate(): Any? {
+        return evalSync("onStoryScriptCreate", handleGlobalChanged)
     }
 
     fun onDestroy() {
         bridge.destroy()
         jsRuntime.close()
     }
+
+    private fun Context.loadJSTemplateFromAssets(filename: String): String? {
+        var js: String? = null
+        try {
+            val stream: InputStream = assets.open(filename)
+            val size = stream.available()
+            val buffer = ByteArray(size)
+            stream.read(buffer)
+            stream.close()
+            js = String(buffer, Charset.defaultCharset())
+        } catch (ex: IOException) {
+            ex.printStackTrace()
+        }
+        return js
+    }
 }
 
-fun Context.loadJSTemplateFromAssets(filename: String): String? {
-    var js: String? = null
-    try {
-        val `is`: InputStream = getAssets().open(filename)
-        val size = `is`.available()
-        val buffer = ByteArray(size)
-        `is`.read(buffer)
-        `is`.close()
-        js = String(buffer, Charset.defaultCharset())
-    } catch (ex: IOException) {
-        ex.printStackTrace()
-    }
-    return js
-}
