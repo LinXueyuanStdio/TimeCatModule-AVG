@@ -1,6 +1,7 @@
 package com.same.ui
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -10,6 +11,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import com.timecat.component.commonsdk.utils.override.LogUtil
 import com.timecat.component.storyscript.StoryScript
+import com.timecat.module.vge.page.VgeActivity
 import com.xiaojinzi.component.impl.*
 
 class MainActivity : Activity() {
@@ -29,6 +31,12 @@ class MainActivity : Activity() {
             val result = script.parse("@name tag")
             LogUtil.e(result?.let { it::class.java })
             LogUtil.e(result)
+//            E/TimeCat: ┆ Thread:main - 1 - @lxy  - MainActivity.onCreate$lambda-1 (MainActivity.kt:32)
+//            ┆ class java.util.HashMap
+//            └──────────────────────────────────────────────────────────────────────────
+//            ┆ Thread:main - 1 - @lxy  - MainActivity.onCreate$lambda-1 (MainActivity.kt:33)
+//            ┆ {BLOCKSTACK=[], CURRENTBLOCK={done=false, currentLine=0.0, data=[{flags=[tag], command=name, type=content, params={}}]}}
+//            └──────────────────────────────────────────────────────────────────────────
         })
         linearLayout.addView(createButton("run2") {
             val result = script.parse(
@@ -42,6 +50,9 @@ class MainActivity : Activity() {
             """
             )
             LogUtil.e(result)
+        })
+        linearLayout.addView(createButton("run3") {
+            startActivity(Intent(this, VgeActivity::class.java))
         })
         // 2021-11-18 22:51:32.889 5244-5244/com.timecat.fake.avg E/TimeCat: ┆ Thread:main - 2 - @lxy  - MainActivity.onCreate$lambda-0 (MainActivity.kt:26)
         // ┆ {CURRENTBLOCK={data=[{flags=[tag], type=content, params={}, command=name}], done=false, currentLine=0.0}, BLOCKSTACK=[]}

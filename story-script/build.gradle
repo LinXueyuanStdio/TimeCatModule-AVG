@@ -4,6 +4,9 @@ apply plugin: 'idea' // optional (to generate IntelliJ IDEA project files)
 android {
     defaultConfig {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a" //,"x86", "x86_64"
+        }
     }
 }
 //test {
@@ -12,6 +15,7 @@ android {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.so'], dir: 'jniLibs')
     api 'androidx.appcompat:appcompat:1.3.1'
     api 'com.timecat.component:engine-js:+'
 
