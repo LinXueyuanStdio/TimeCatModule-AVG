@@ -9,12 +9,12 @@
         global.story = new StoryScript(fn);
     }
     global.StoryNext = function(args) {
-        global.story.next();
+        return global.story.next();
     }
     global.StoryLoad = function(scriptString) {
-        global.story.load(scriptString);
+        return global.story.load(scriptString);
     }
     global.StorySetSaveScope = function(saveScope) {
-        global.story.setSaveScope(saveScope);
+        return global.story.setSaveScope(saveScope);
     }
 })(this);

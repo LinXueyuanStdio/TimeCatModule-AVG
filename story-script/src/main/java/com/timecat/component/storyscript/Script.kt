@@ -289,7 +289,7 @@ class Script(
         var stepRet = this.parser.next()
         LogUtil.se(stepRet)
         LogUtil.se("${stepRet!!::class}")
-        var ret = stepRet as? Return ?: return
+        var ret = (stepRet as? Map<String, Any?>)?.let { Return.fromMap(it) } ?: return
 
         while (!ret.done) {
             val context = ret.value
@@ -323,7 +323,7 @@ class Script(
                 break
             }
             stepRet = this.parser.next()
-            ret = stepRet as? Return ?: return
+            ret = (stepRet as? Map<String, Any?>)?.let { Return.fromMap(it) } ?: break
         }
         if (ret.done) {
             this.isAuto = false
