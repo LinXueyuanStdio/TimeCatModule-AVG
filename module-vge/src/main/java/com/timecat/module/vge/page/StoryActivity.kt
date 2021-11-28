@@ -1,13 +1,13 @@
 package com.timecat.module.vge.page
 
 import android.view.ViewGroup
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelStore
 import com.timecat.component.commonsdk.utils.override.LogUtil
 import com.timecat.component.storyscript.IEventCore
 import com.timecat.component.storyscript.Script
 import com.timecat.component.storyscript.ScriptEvent
 import com.timecat.component.storyscript.postEvent
-import com.timecat.layout.ui.business.form.Body
 import com.timecat.middle.setting.BaseSettingActivity
 import com.timecat.module.vge.plugins.show.Show
 
@@ -23,7 +23,7 @@ class StoryActivity : BaseSettingActivity() {
     val core = object : IEventCore {
         override suspend fun getAssetsPath(): String {
             LogUtil.se("getAssetsPath")
-            return "TestStory"
+            return "TestStory/assets/"
         }
 
         override suspend fun readFile(filename: String): String {
@@ -39,7 +39,12 @@ class StoryActivity : BaseSettingActivity() {
         override fun getViewModelStore(): ViewModelStore {
             return this@StoryActivity.viewModelStore
         }
+
+        override fun getLifecycle(): Lifecycle {
+            return this@StoryActivity.lifecycle
+        }
     }
+
     override fun addSettingItems(container: ViewGroup) {
         val story = Script(this, core)
         val storyScript = """
@@ -89,6 +94,6 @@ class StoryActivity : BaseSettingActivity() {
 //        }
 
         core.postEvent(ScriptEvent.Init)
-        core.postEvent(ScriptEvent.Load("story/1", true), 10 * 1000)
+        core.postEvent(ScriptEvent.Load("scripts/1", true), 3 * 1000)
     }
 }

@@ -17,7 +17,7 @@ import kotlin.collections.set
  * @description null
  * @usage null
  */
-interface IEventCore : ViewModelStoreOwner {
+interface IEventCore : ViewModelStoreOwner, LifecycleOwner {
     suspend fun getAssetsPath(): String
     suspend fun readFile(filename:String): String
     fun loadAssets(text: String)
@@ -145,6 +145,13 @@ inline fun <reified T> observeEvent(
             onReceived
         )
 }
+
+inline fun <reified T> IEventCore.observeEvent(
+    dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
+    minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
+    isSticky: Boolean = false,
+    noinline onReceived: suspend (T) -> Unit
+) = observeEvent(this, this, dispatcher, minActiveState, isSticky, onReceived)
 
 inline fun <reified T> observeEvent(
     scope: ViewModelStoreOwner, lifecycleOwner: LifecycleOwner,

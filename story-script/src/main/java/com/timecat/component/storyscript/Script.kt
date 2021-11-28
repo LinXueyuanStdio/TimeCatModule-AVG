@@ -20,7 +20,7 @@ import kotlinx.coroutines.delay
 class Script(
     val context: Context,
     val core: IEventCore,
-) : IScript, LifecycleOwner {
+) : IScript {
     val parser = StoryScript(context, this)
     var macros = mutableMapOf<String, (List<String>, Map<String, Any?>) -> Unit>()
     var macroKeys = mutableListOf<Any>()
@@ -36,32 +36,40 @@ class Script(
     fun initStoryScript() {
         parser.onCreate()
         parser.onStoryScriptCreate()
-        observeEvent<ScriptEvent.Init>(core, this, Dispatchers.IO) {
+        core.observeEvent<ScriptEvent.Init>(Dispatchers.IO) {
+            Log.e("script", "ScriptEvent.Init")
             registerEventObservers()
         }
     }
 
     private fun registerEventObservers() {
-        observeEvent<ScriptEvent.Load>(core, this, Dispatchers.IO) {
+        core.observeEvent<ScriptEvent.Load>(Dispatchers.IO) {
+            Log.e("script", "ScriptEvent.Load")
             script_load(it.name, it.autoStart, it.next)
         }
-        observeEvent<ScriptEvent.Trigger>(core, this, Dispatchers.IO) {
+        core.observeEvent<ScriptEvent.Trigger>(Dispatchers.IO) {
+            Log.e("script", "ScriptEvent.Trigger")
             script_trigger(it.DONOTSTOPAUTOORSKIP, it.next)
         }
-        observeEvent<ScriptEvent.Exec>(core, this, Dispatchers.IO) {
+        core.observeEvent<ScriptEvent.Exec>(Dispatchers.IO) {
+            Log.e("script", "ScriptEvent.Exec")
             script_exec(it.command, it.flags, it.params, it.next)
         }
-        observeEvent<ScriptEvent.Mode>(core, this, Dispatchers.IO) {
+        core.observeEvent<ScriptEvent.Mode>(Dispatchers.IO) {
+            Log.e("script", "ScriptEvent.Mode")
             script_mode(it.mode)
         }
-        observeEvent<StoreEvent.SaveArchive>(core, this, Dispatchers.IO) {
+        core.observeEvent<StoreEvent.SaveArchive>(Dispatchers.IO) {
+            Log.e("script", "ScriptEvent.SaveArchive")
             script_save_archive(it.saveScene, it.next)
         }
-        observeEvent<StoreEvent.LoadArchive>(core, this, Dispatchers.IO) {
+        core.observeEvent<StoreEvent.LoadArchive>(Dispatchers.IO) {
+            Log.e("script", "ScriptEvent.LoadArchive")
             script_load_archive(it.loadScene(), it.next)
         }
         core.postEvent(StoreEvent.LoadGlobal())
-        observeEvent<StoreEvent.SaveGlobal>(core, this, Dispatchers.IO) {
+        core.observeEvent<StoreEvent.SaveGlobal>(Dispatchers.IO) {
+            Log.e("script", "ScriptEvent.SaveGlobal")
             save_global(it.next)
         }
     }
@@ -235,8 +243,8 @@ class Script(
 
         if (scriptName != null) {
             val assetsPath = core.getAssetsPath()
-            val scriptFile = "${assetsPath}${scriptName}.tcs"
-            val scriptConfig = "${assetsPath}${scriptName}.json"
+            val scriptFile = "${assetsPath}${scriptName}.bks"
+            val scriptConfig = "${assetsPath}${scriptName}.bkc"
 
             this.loading = true
             // this.props.onLoading && this.props.onLoading()
@@ -330,11 +338,4 @@ class Script(
     override fun handleGlobalChanged() {
         core.postEvent(StoreEvent.SaveGlobal(mapOf()))
     }
-
-    //region LifecycleOwner
-    private val mLifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
-    override fun getLifecycle(): Lifecycle {
-        return mLifecycleRegistry
-    }
-    //endregion
 }
