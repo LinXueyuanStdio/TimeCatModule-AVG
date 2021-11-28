@@ -86,37 +86,54 @@ class StoryScriptTest {
                     ||
                     (value is Map<*, *> && JSONObject(v as Map<String, *>).eq(nextIndent, JSONObject(value as Map<String, *>)))
             }
+            is BigDecimal -> {
+                when (value) {
+                    is Double -> {
+                        v.toDouble() - value == 0.0
+                    }
+                    is Int -> {
+                        v.toInt() - value == 0
+                    }
+                    is BigDecimal -> {
+                        v == value
+                    }
+                    else -> {
+                        v.toString() == value.toString()
+                    }
+                }
+            }
+            is Double -> {
+                when (value) {
+                    is Double -> {
+                        v.toDouble() - value == 0.0
+                    }
+                    is Int -> {
+                        v.toInt() - value == 0
+                    }
+                    is BigDecimal -> {
+                        v.toDouble() - value.toDouble() == 0.0
+                    }
+                    else -> {
+                        v.toString() == value.toString()
+                    }
+                }
+            }
+            is Int -> {
+                when (value) {
+                    is Double -> {
+                        v.toDouble() - value == 0.0
+                    }
+                    is Int -> {
+                        v.toInt() - value == 0
+                    }
+                    else -> {
+                        v.toString() == value.toString()
+                    }
+                }
+            }
             else -> {
                 if (v == null && value == null) {
                     true
-                } else if (v is BigDecimal) {
-                    if (value is Double) {
-                        v.toDouble() - value == 0.0
-                    } else if (value is Int) {
-                        v.toInt() - value == 0
-                    } else if (value is BigDecimal) {
-                        v == value
-                    } else {
-                        v.toString() == value.toString()
-                    }
-                } else if (v is Double) {
-                    if (value is Double) {
-                        v.toDouble() - value == 0.0
-                    } else if (value is Int) {
-                        v.toInt() - value == 0
-                    } else if (value is BigDecimal) {
-                        v.toDouble() - value.toDouble() == 0.0
-                    } else {
-                        v.toString() == value.toString()
-                    }
-                } else if (v is Int) {
-                    if (value is Double) {
-                        v.toDouble() - value == 0.0
-                    } else if (value is Int) {
-                        v.toInt() - value == 0
-                    } else {
-                        v.toString() == value.toString()
-                    }
                 } else {
                     v == value
                 }
