@@ -46,35 +46,28 @@ class StoryScriptTest {
 
     fun JSONObject.eq(target: JSONObject): Boolean {
         for ((k, v) in innerMap) {
-            val value = target.get(k)
-            if (v is JSONObject) {
-                if (value is JSONObject) {
-                    return v.eq(value)
-                } else {
-                    return false
+            val value = target.get(k) ?: return false
+
+            val isEqual = when (v) {
+                is JSONObject -> {
+                    value is JSONObject && v.eq(value)
                 }
-            } else if(v is JSONArray){
-                if (value is JSONArray) {
-                    return v.eq(value)
-                } else {
-                    return false
+                is JSONArray -> {
+                    value is JSONArray && v.eq(value)
                 }
-            } else if(v is List<*>){
-                if (value is List<*>) {
-                    return JSONArray(v).eq(JSONArray(value))
-                } else {
-                    return false
+                is List<*> -> {
+                    value is List<*> && JSONArray(v).eq(JSONArray(value))
                 }
-            } else if(v is Map<*,*>){
-                if (value is Map<*,*>) {
-                    return JSONObject(v as Map<String,*>).eq(JSONObject(value as Map<String,*>))
-                } else {
-                    return false
+                is Map<*, *> -> {
+                    value is Map<*, *> && JSONObject(v as Map<String, *>).eq(JSONObject(value as Map<String, *>))
                 }
-            } else {
-                if (v != value) {
-                    return false
+                else -> {
+                    v == value
                 }
+            }
+            println("at [${k}] {${v}}(${v::class}) ==${isEqual}== {${value}}(${value::class})")
+            if (!isEqual) {
+                return false
             }
         }
         return true
@@ -82,33 +75,38 @@ class StoryScriptTest {
 
     fun JSONArray.eq(target: JSONArray): Boolean {
         return mapIndexed { index, any ->
-            when (any) {
+            val value = target[index]
+            val isEqual = when (any) {
                 is Map<*, *> -> {
                     val targetValue = JSONObject(any as Map<String, *>)
-                    val sourceValue = JSONObject(target[index] as Map<String, *>)
+                    val sourceValue = JSONObject(value as Map<String, *>)
                     targetValue.eq(sourceValue)
                 }
                 is List<*> -> {
-                    JSONArray(any).eq(JSONArray(target[index] as List<*>))
+                    JSONArray(any).eq(JSONArray(value as List<*>))
                 }
                 is JSONArray -> {
-                    any.eq(target[index] as JSONArray)
+                    any.eq(value as JSONArray)
                 }
                 is JSONObject -> {
-                    any.eq(target[index] as JSONObject)
+                    any.eq(value as JSONObject)
                 }
                 else -> {
                     true
                 }
             }
+            println("at [${index}] {${any}}(${any::class}) ==${isEqual}== {${value}}(${value::class})")
+            isEqual
         }.all { it }
     }
 
     infix fun String.runEq(result: String): Boolean {
         val obj = parse(this) ?: return false
         val resultObj = JSON.parse(result) as JSONArray
-        Log.e("runEq", (obj).toString())
-        Log.e("runEq", (resultObj.eq(obj)).toString())
+        println("runEq")
+        println(obj.toString())
+        println(resultObj.toString())
+        println(resultObj.eq(obj).toString())
         return resultObj.eq(obj)
     }
 
