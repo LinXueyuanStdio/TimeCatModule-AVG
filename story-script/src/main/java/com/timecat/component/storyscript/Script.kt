@@ -41,7 +41,7 @@ class Script(
         }
     }
 
-    fun registerEventObservers() {
+    private fun registerEventObservers() {
         observeEvent<ScriptEvent.Load>(Dispatchers.IO) {
             script_load(it.name, it.autoStart, it.next)
         }
@@ -66,11 +66,11 @@ class Script(
         }
     }
 
-    suspend fun script_load(name: String, autoStart: Boolean, next: suspend () -> Unit) {
+    private suspend fun script_load(name: String, autoStart: Boolean, next: suspend () -> Unit) {
         load(name, autoStart, next)
     }
 
-    suspend fun script_trigger(DONOTSTOPAUTOORSKIP: Boolean, next: suspend () -> Unit) {
+    private suspend fun script_trigger(DONOTSTOPAUTOORSKIP: Boolean, next: suspend () -> Unit) {
         trigger(DONOTSTOPAUTOORSKIP, next)
     }
 
@@ -118,7 +118,7 @@ class Script(
     /**
      * listen script execute
      */
-    suspend fun script_exec(
+    private suspend fun script_exec(
         command: String,
         flags: List<String>,
         params: Map<String, Any?>,
@@ -163,15 +163,15 @@ class Script(
         }
     }
 
-    fun script_set_autointerval(autoInterval: Long?) {
+    private fun script_set_autointerval(autoInterval: Long?) {
         this.autoInterval = autoInterval ?: this.autoInterval
     }
 
-    fun script_get_autointerval(): Long {
+    private fun script_get_autointerval(): Long {
         return autoInterval
     }
 
-    fun script_mode(mode: String) {
+    private fun script_mode(mode: String) {
         this.isAuto = false
         this.isSkip = false
         when (mode) {
@@ -194,7 +194,7 @@ class Script(
      *     ctx.data.$$scene = $$scene
      * }
      */
-    suspend fun script_save_archive(saveScene: (Scene) -> Unit, next: suspend () -> Unit) {
+    private suspend fun script_save_archive(saveScene: (Scene) -> Unit, next: suspend () -> Unit) {
         // const { blocks, saveScope } = this.parser.getData()
         val blocks = this.parser.getBlockData()
         val saveScope = this.parser.getSaveScope()
@@ -210,7 +210,7 @@ class Script(
         next()
     }
 
-    suspend fun script_load_archive(scene: Scene, next: suspend () -> Unit) {
+    private suspend fun script_load_archive(scene: Scene, next: suspend () -> Unit) {
         val (script, blocks, saveScope, autoInterval) = scene
 
         this.load(script, false, {})
@@ -223,14 +223,14 @@ class Script(
     /**
      * save global variables once any of them changed
      */
-    suspend fun save_global(next: suspend () -> Unit) {
+    private suspend fun save_global(next: suspend () -> Unit) {
 //        const globalScope = this.parser.getGlobalScope()TODO
 //
 //        ctx.globalData.$$scene = { globalScope }TODO
         next()
     }
 
-    suspend fun load(name: String?, autoStart: Boolean, next: suspend () -> Unit) {
+    private suspend fun load(name: String?, autoStart: Boolean, next: suspend () -> Unit) {
         val scriptName = name
 
         if (scriptName != null) {
@@ -271,7 +271,7 @@ class Script(
         }
     }
 
-    suspend fun beginStory() {
+    private suspend fun beginStory() {
         var ret = this.parser.next() as? Return ?: return
 
         while (!ret.done) {

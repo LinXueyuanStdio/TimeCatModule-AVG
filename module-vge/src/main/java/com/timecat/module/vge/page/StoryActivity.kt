@@ -4,8 +4,11 @@ import android.view.ViewGroup
 import androidx.lifecycle.ViewModelStore
 import com.timecat.component.storyscript.IEventCore
 import com.timecat.component.storyscript.Script
+import com.timecat.component.storyscript.ScriptEvent
+import com.timecat.component.storyscript.postEvent
 import com.timecat.layout.ui.business.form.Body
 import com.timecat.middle.setting.BaseSettingActivity
+import com.timecat.module.vge.plugins.show.Show
 
 /**
  * @author 林学渊
@@ -16,24 +19,25 @@ import com.timecat.middle.setting.BaseSettingActivity
  */
 class StoryActivity : BaseSettingActivity() {
     override fun title(): String = "故事"
+    val core = object : IEventCore {
+        override suspend fun getAssetsPath(): String {
+            return "TestStory"
+        }
+
+        override suspend fun readFile(filename: String): String {
+            val text = assets.open(filename).bufferedReader().use { it.readText() }
+            return text
+        }
+
+        override fun loadAssets(text: String) {
+        }
+
+        override fun getViewModelStore(): ViewModelStore {
+            return this@StoryActivity.viewModelStore
+        }
+    }
     override fun addSettingItems(container: ViewGroup) {
-        val story = Script(this, object : IEventCore {
-            override suspend fun getAssetsPath(): String {
-                return "TestStory"
-            }
-
-            override suspend fun readFile(filename: String): String {
-                val text = assets.open(filename).bufferedReader().use { it.readText() }
-                return text
-            }
-
-            override fun loadAssets(text: String) {
-            }
-
-            override fun getViewModelStore(): ViewModelStore {
-                return this@StoryActivity.viewModelStore
-            }
-        })
+        val story = Script(this, core)
         val storyScript = """
             [bg file='chapters/1/1_bg_pre.png']
         
@@ -67,6 +71,10 @@ class StoryActivity : BaseSettingActivity() {
             [router push path='/story/2']
         """
         story.initStoryScript()
+
+        val show = Show(this, core, container)
+        show.initShow()
+
         val jsonArray = story.parser.parse2JSONArray(storyScript)
         if (jsonArray == null) {
             container.Body("error when parse.")
@@ -75,5 +83,8 @@ class StoryActivity : BaseSettingActivity() {
         for (i in jsonArray) {
             container.Body("${i}")
         }
+
+        core.postEvent(ScriptEvent.Init)
+
     }
 }
