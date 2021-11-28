@@ -10,13 +10,19 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import com.timecat.component.commonsdk.utils.override.LogUtil
+import com.timecat.component.storyscript.IScript
 import com.timecat.component.storyscript.StoryScript
+import com.timecat.module.vge.page.StoryActivity
 import com.timecat.module.vge.page.VgeActivity
 import com.xiaojinzi.component.impl.*
 
 class MainActivity : Activity() {
     val script by lazy {
-        StoryScript(this).also {
+        StoryScript(this, object : IScript {
+            override fun handleGlobalChanged() {
+                LogUtil.e("handleGlobalChanged")
+            }
+        }).also {
             it.onCreate()
         }
     }
@@ -27,7 +33,7 @@ class MainActivity : Activity() {
         LogUtil.OPEN_LOG = true
         val linearLayout = LinearLayout(this)
         linearLayout.orientation = LinearLayout.VERTICAL
-        linearLayout.addView(createButton("run") {
+        linearLayout.addView(createButton("parse") {
             val result = script.parse("@name tag")
             LogUtil.e(result?.let { it::class.java })
             LogUtil.e(result)
@@ -38,7 +44,7 @@ class MainActivity : Activity() {
 //            ┆ {BLOCKSTACK=[], CURRENTBLOCK={done=false, currentLine=0.0, data=[{flags=[tag], command=name, type=content, params={}}]}}
 //            └──────────────────────────────────────────────────────────────────────────
         })
-        linearLayout.addView(createButton("run2") {
+        linearLayout.addView(createButton("parse2") {
             val result = script.parse(
                 """
                 #while x > 1 + 1 && ((x == 'test' || y >= 30) && a) || (b + 2) * -10
@@ -51,8 +57,11 @@ class MainActivity : Activity() {
             )
             LogUtil.e(result)
         })
-        linearLayout.addView(createButton("run3") {
+        linearLayout.addView(createButton("VgeActivity") {
             startActivity(Intent(this, VgeActivity::class.java))
+        })
+        linearLayout.addView(createButton("StoryActivity") {
+            startActivity(Intent(this, StoryActivity::class.java))
         })
         // 2021-11-18 22:51:32.889 5244-5244/com.timecat.fake.avg E/TimeCat: ┆ Thread:main - 2 - @lxy  - MainActivity.onCreate$lambda-0 (MainActivity.kt:26)
         // ┆ {CURRENTBLOCK={data=[{flags=[tag], type=content, params={}, command=name}], done=false, currentLine=0.0}, BLOCKSTACK=[]}

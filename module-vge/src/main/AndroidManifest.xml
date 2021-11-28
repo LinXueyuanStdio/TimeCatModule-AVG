@@ -4,6 +4,7 @@
 
     <application>
         <activity android:name=".page.VgeActivity" />
+        <activity android:name=".page.StoryActivity" />
     </application>
 
 </manifest>

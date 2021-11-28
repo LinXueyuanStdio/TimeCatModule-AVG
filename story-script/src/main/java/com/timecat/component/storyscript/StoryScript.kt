@@ -1,6 +1,8 @@
 package com.timecat.component.storyscript
 
 import android.content.Context
+import android.util.Log
+import com.alibaba.fastjson.JSONArray
 import com.timecat.component.engine.js.Bridge
 import com.timecat.component.engine.js.HermesRuntime
 import java.io.IOException
@@ -39,6 +41,13 @@ class StoryScript(
         return evalSync("StoryParser", script)
     }
 
+    fun parse2JSONArray(text: String): JSONArray? {
+        val obj = parse(text)
+        Log.e("parse", obj?.let { it::class }.toString())
+        Log.e("parse", (obj).toString())
+        val list = obj as? ArrayList<*> ?: return null
+        return JSONArray(list)
+    }
     fun load(script: String): Any? {
         return evalSync("StoryLoad", script)
     }
