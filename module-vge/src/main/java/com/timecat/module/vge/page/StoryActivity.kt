@@ -2,6 +2,7 @@ package com.timecat.module.vge.page
 
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelStore
+import com.timecat.component.commonsdk.utils.override.LogUtil
 import com.timecat.component.storyscript.IEventCore
 import com.timecat.component.storyscript.Script
 import com.timecat.component.storyscript.ScriptEvent
@@ -21,15 +22,18 @@ class StoryActivity : BaseSettingActivity() {
     override fun title(): String = "故事"
     val core = object : IEventCore {
         override suspend fun getAssetsPath(): String {
+            LogUtil.se("getAssetsPath")
             return "TestStory"
         }
 
         override suspend fun readFile(filename: String): String {
+            LogUtil.se("read ${filename}")
             val text = assets.open(filename).bufferedReader().use { it.readText() }
             return text
         }
 
         override fun loadAssets(text: String) {
+            LogUtil.se("loadAssets ${text}")
         }
 
         override fun getViewModelStore(): ViewModelStore {
@@ -75,16 +79,16 @@ class StoryActivity : BaseSettingActivity() {
         val show = Show(this, core, container)
         show.initShow()
 
-        val jsonArray = story.parser.parse2JSONArray(storyScript)
-        if (jsonArray == null) {
-            container.Body("error when parse.")
-            return
-        }
-        for (i in jsonArray) {
-            container.Body("${i}")
-        }
+//        val jsonArray = story.parser.parse2JSONArray(storyScript)
+//        if (jsonArray == null) {
+//            container.Body("error when parse.")
+//            return
+//        }
+//        for (i in jsonArray) {
+//            container.Body("${i}")
+//        }
 
         core.postEvent(ScriptEvent.Init)
-
+        core.postEvent(ScriptEvent.Load("story/1", true), 10 * 1000)
     }
 }
