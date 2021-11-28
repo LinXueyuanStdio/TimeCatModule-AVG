@@ -2,6 +2,7 @@ apply from: "${project.rootDir}/gradle/library_header.gradle"
 apply plugin: 'idea' // optional (to generate IntelliJ IDEA project files)
 
 android {
+    compileSdkVersion 31
     defaultConfig {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
@@ -18,8 +19,8 @@ dependencies {
     implementation fileTree(include: ['*.so'], dir: 'jniLibs')
     api 'androidx.appcompat:appcompat:1.4.0'
     api 'com.timecat.component:engine-js:+'
-    api 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
-    api 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1'
+    api 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.0'
+    api 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.0'
 
     api 'com.alibaba:fastjson:1.2.76'
 

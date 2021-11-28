@@ -78,11 +78,11 @@ class StoryScript(
     }
 
     fun getSaveScope(): Scene? {
-        TODO("Not yet implemented")
+        return null
     }
 
     fun getBlockData(): Scene? {
-        TODO("Not yet implemented")
+        return null
     }
 }
 

@@ -9,8 +9,13 @@
         global.story = new StoryScript(fn);
         return handleGlobalChanged;
     }
-    global.parseScriptASync = function(scriptString, callback) {
-        const story = ScriptParser(scriptString);
-        callback(story);
+    global.StoryNext = function() {
+        global.story.next();
+    }
+    global.StoryLoad = function(scriptString) {
+        global.story.load(scriptString);
+    }
+    global.StorySetSaveScope = function(scriptString) {
+        global.story.load(scriptString);
     }
 })(this);
