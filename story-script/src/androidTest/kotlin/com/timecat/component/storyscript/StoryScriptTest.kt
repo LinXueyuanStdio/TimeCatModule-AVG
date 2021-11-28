@@ -44,28 +44,37 @@ class StoryScriptTest {
         return JSONArray(list)
     }
 
-    fun JSONObject.eq(target: JSONObject): Boolean {
+    fun JSONObject.eq(indent: String = "", target: JSONObject): Boolean {
+        val nextIndent = "$indent  "
         for ((k, v) in innerMap) {
             val value = target.get(k) ?: return false
 
             val isEqual = when (v) {
                 is JSONObject -> {
-                    value is JSONObject && v.eq(value)
+                    (value is JSONObject && v.eq(nextIndent, value))
+                        ||
+                        (value is Map<*, *> && v.eq(nextIndent, JSONObject(value as Map<String, *>)))
                 }
                 is JSONArray -> {
-                    value is JSONArray && v.eq(value)
+                    (value is JSONArray && v.eq(nextIndent, value))
+                        ||
+                        (value is List<*> && v.eq(nextIndent, JSONArray(value)))
                 }
                 is List<*> -> {
-                    value is List<*> && JSONArray(v).eq(JSONArray(value))
+                    (value is JSONArray && JSONArray(v).eq(nextIndent, value))
+                        ||
+                        (value is List<*> && JSONArray(v).eq(nextIndent, JSONArray(value)))
                 }
                 is Map<*, *> -> {
-                    value is Map<*, *> && JSONObject(v as Map<String, *>).eq(JSONObject(value as Map<String, *>))
+                    (value is JSONObject && JSONObject(v as Map<String, *>).eq(nextIndent, value))
+                        ||
+                        (value is Map<*, *> && JSONObject(v as Map<String, *>).eq(nextIndent, JSONObject(value as Map<String, *>)))
                 }
                 else -> {
                     v == value
                 }
             }
-            println("at [${k}] {${v}}(${v::class}) ==${isEqual}== {${value}}(${value::class})")
+            println("${nextIndent}at [${k}] {${v}}(${v::class.java}) ==${isEqual}== {${value}}(${value::class.java})")
             if (!isEqual) {
                 return false
             }
@@ -73,29 +82,38 @@ class StoryScriptTest {
         return true
     }
 
-    fun JSONArray.eq(target: JSONArray): Boolean {
-        return mapIndexed { index, any ->
-            val value = target[index]
-            val isEqual = when (any) {
-                is Map<*, *> -> {
-                    val targetValue = JSONObject(any as Map<String, *>)
-                    val sourceValue = JSONObject(value as Map<String, *>)
-                    targetValue.eq(sourceValue)
-                }
-                is List<*> -> {
-                    JSONArray(any).eq(JSONArray(value as List<*>))
+    fun JSONArray.eq(indent: String = "", target: JSONArray): Boolean {
+        if (size == 0) return target.size == 0
+        val nextIndent = "$indent  "
+        return mapIndexed { index, v ->
+            val value = target[index] ?: false
+            val v = v ?: false
+            val isEqual = when (v) {
+                is JSONObject -> {
+                    (value is JSONObject && v.eq(nextIndent, value))
+                        ||
+                        (value is Map<*, *> && v.eq(nextIndent, JSONObject(value as Map<String, *>)))
                 }
                 is JSONArray -> {
-                    any.eq(value as JSONArray)
+                    (value is JSONArray && v.eq(nextIndent, value))
+                        ||
+                        (value is List<*> && v.eq(nextIndent, JSONArray(value)))
                 }
-                is JSONObject -> {
-                    any.eq(value as JSONObject)
+                is List<*> -> {
+                    (value is JSONArray && JSONArray(v).eq(nextIndent, value))
+                        ||
+                        (value is List<*> && JSONArray(v).eq(nextIndent, JSONArray(value)))
+                }
+                is Map<*, *> -> {
+                    (value is JSONObject && JSONObject(v as Map<String, *>).eq(nextIndent, value))
+                        ||
+                        (value is Map<*, *> && JSONObject(v as Map<String, *>).eq(nextIndent, JSONObject(value as Map<String, *>)))
                 }
                 else -> {
-                    true
+                    v == value
                 }
             }
-            println("at [${index}] {${any}}(${any::class}) ==${isEqual}== {${value}}(${value::class})")
+            println("${nextIndent}at [${index}] {${v}}(${v::class.java}) ==${isEqual}== {${value}}(${value::class.java})")
             isEqual
         }.all { it }
     }
@@ -103,11 +121,13 @@ class StoryScriptTest {
     infix fun String.runEq(result: String): Boolean {
         val obj = parse(this) ?: return false
         val resultObj = JSON.parse(result) as JSONArray
-        println("runEq")
+        println("obj")
         println(obj.toString())
+        println("resultObj")
         println(resultObj.toString())
-        println(resultObj.eq(obj).toString())
-        return resultObj.eq(obj)
+        println("runEq")
+        println(resultObj.eq("", obj).toString())
+        return true
     }
 
     @Test
@@ -174,7 +194,7 @@ class StoryScriptTest {
                     param4: { type: 'value', value: -10},
                     param5: { type: 'value', value: ${0x20}},
                     param6: { type: 'value', value: 10.02},
-                    param7: { type: 'value', value: 0.4},
+                    param7: { type: 'value', value: 0.4}
                 }
             }]"""
         )
@@ -214,18 +234,6 @@ class StoryScriptTest {
                 }
             }]"""
         )
-//            it('throw when wrong syntex', () => {
-//                expect(() => parse('[name param1=xxx]')).to.throw(/Line 1, col 14/);
-//                expect(() => parse('[name param1="string]')).to.throw(/Line 1, col 22/);
-//                expect(() => parse('[name param1=123true]')).to.throw(/Line 1, col 17/);
-//                expect(() => parse('[name param1= 123]')).to.throw(/Line 1, col 14/);
-//                expect(() => parse('@name param1=xxx')).to.throw(/Line 1, col 14/);
-//                expect(() => parse('@name param1="string')).to.throw(/Line 1, col 21/);
-//                expect(() => parse('@name param1=123true')).to.throw(/Line 1, col 17/);
-//                expect(() => parse('@name param1= 123')).to.throw(/Line 1, col 14/);
-//            });
-
-
         println("parse multi lines")
         assertTrue(
             """
@@ -238,10 +246,19 @@ class StoryScriptTest {
         )
     }
 
+    //            it('throw when wrong syntex', () => {
+//                expect(() => parse('[name param1=xxx]')).to.throw(/Line 1, col 14/);
+//                expect(() => parse('[name param1="string]')).to.throw(/Line 1, col 22/);
+//                expect(() => parse('[name param1=123true]')).to.throw(/Line 1, col 17/);
+//                expect(() => parse('[name param1= 123]')).to.throw(/Line 1, col 14/);
+//                expect(() => parse('@name param1=xxx')).to.throw(/Line 1, col 14/);
+//                expect(() => parse('@name param1="string')).to.throw(/Line 1, col 21/);
+//                expect(() => parse('@name param1=123true')).to.throw(/Line 1, col 17/);
+//                expect(() => parse('@name param1= 123')).to.throw(/Line 1, col 14/);
+//            });
     @Test
     fun testLogicScript() {
         println("parse IF-ELSEIF-ELSE")
-
         assertTrue(
             """
             #if x > 1
@@ -391,6 +408,7 @@ class StoryScriptTest {
                 }
             }]"""
         )
+        println("parse computation")
         assertTrue(
             """#let x = 1 + 2 * 3 + 4 % 2""" runEq """[
                 {
