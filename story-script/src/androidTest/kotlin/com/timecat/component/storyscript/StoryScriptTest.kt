@@ -5,8 +5,8 @@ import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.alibaba.fastjson.JSON
-import org.json.JSONArray
-import org.json.JSONObject
+import com.alibaba.fastjson.JSONArray
+import com.alibaba.fastjson.JSONObject
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -29,7 +29,7 @@ class StoryScriptTest {
     fun setUp() {
         script = StoryScript(context, object : IScript {
             override fun handleGlobalChanged() {
-                print("handleGlobalChanged")
+                println("handleGlobalChanged")
             }
         }).also {
             it.onCreate()
@@ -39,17 +39,77 @@ class StoryScriptTest {
     fun parse(text: String): JSONArray? {
         val obj = script.parse(text)
         Log.e("parse", obj?.let { it::class }.toString())
-        Log.e("parse", (obj as? String).toString())
+        Log.e("parse", (obj).toString())
         val list = obj as? ArrayList<*> ?: return null
         return JSONArray(list)
     }
 
-    infix fun String.runEq(result: String): Boolean {
-        val obj = parse(this) ?: return true
-        val resultObj = JSON.parse(result)
-        Log.e("runEq", (obj as? String).toString())
-        Log.e("runEq", (resultObj.equals(obj)).toString())
+    fun JSONObject.eq(target: JSONObject): Boolean {
+        for ((k, v) in innerMap) {
+            val value = target.get(k)
+            if (v is JSONObject) {
+                if (value is JSONObject) {
+                    return v.eq(value)
+                } else {
+                    return false
+                }
+            } else if(v is JSONArray){
+                if (value is JSONArray) {
+                    return v.eq(value)
+                } else {
+                    return false
+                }
+            } else if(v is List<*>){
+                if (value is List<*>) {
+                    return JSONArray(v).eq(JSONArray(value))
+                } else {
+                    return false
+                }
+            } else if(v is Map<*,*>){
+                if (value is Map<*,*>) {
+                    return JSONObject(v as Map<String,*>).eq(JSONObject(value as Map<String,*>))
+                } else {
+                    return false
+                }
+            } else {
+                if (v != value) {
+                    return false
+                }
+            }
+        }
         return true
+    }
+
+    fun JSONArray.eq(target: JSONArray): Boolean {
+        return mapIndexed { index, any ->
+            when (any) {
+                is Map<*, *> -> {
+                    val targetValue = JSONObject(any as Map<String, *>)
+                    val sourceValue = JSONObject(target[index] as Map<String, *>)
+                    targetValue.eq(sourceValue)
+                }
+                is List<*> -> {
+                    JSONArray(any).eq(JSONArray(target[index] as List<*>))
+                }
+                is JSONArray -> {
+                    any.eq(target[index] as JSONArray)
+                }
+                is JSONObject -> {
+                    any.eq(target[index] as JSONObject)
+                }
+                else -> {
+                    true
+                }
+            }
+        }.all { it }
+    }
+
+    infix fun String.runEq(result: String): Boolean {
+        val obj = parse(this) ?: return false
+        val resultObj = JSON.parse(result) as JSONArray
+        Log.e("runEq", (obj).toString())
+        Log.e("runEq", (resultObj.eq(obj)).toString())
+        return resultObj.eq(obj)
     }
 
     @Test
@@ -64,7 +124,7 @@ class StoryScriptTest {
             }]
             """
         )
-        print("parse script wrapped with `[]`")
+        println("parse script wrapped with `[]`")
         assertTrue(
             "[name flag]" runEq """[{
                 type: 'content',
@@ -73,7 +133,7 @@ class StoryScriptTest {
                 params: {}
             }]"""
         )
-        print("parse no parameter")
+        println("parse no parameter")
         assertTrue(
             "[name]" runEq """[{
                 type: 'content',
@@ -82,7 +142,7 @@ class StoryScriptTest {
                 params: {}
             }]"""
         )
-        print("parse parameter value of ascii string")
+        println("parse parameter value of ascii string")
         assertTrue(
             "[name param=\"string\"]" runEq """[{
                 type: 'content',
@@ -91,7 +151,7 @@ class StoryScriptTest {
                 params: { param: { type: 'value', value: 'string' } }
             }]"""
         )
-        print("parse parameter value of non-ascii string")
+        println("parse parameter value of non-ascii string")
         assertTrue(
             "[name param=\"中文测试,日本語の分析テスト\" param2=\'中a文s\\测**|/试%……%\']" runEq """[{
                 type: 'content',
@@ -103,7 +163,7 @@ class StoryScriptTest {
                 }
             }]"""
         )
-        print("parse parameter value of number")
+        println("parse parameter value of number")
         assertTrue(
             "[name param1=123 param2=00123 param3=0x123 param4=-10 param5=+0x20 param6=10.02 param7=.4]" runEq """[{
                 type: 'content',
@@ -112,15 +172,15 @@ class StoryScriptTest {
                 params: {
                     param1: { type: 'value', value: 123},
                     param2: { type: 'value', value: 123},
-                    param3: { type: 'value', value: 0x123},
+                    param3: { type: 'value', value: ${0x123}},
                     param4: { type: 'value', value: -10},
-                    param5: { type: 'value', value: 0x20},
+                    param5: { type: 'value', value: ${0x20}},
                     param6: { type: 'value', value: 10.02},
                     param7: { type: 'value', value: 0.4},
                 }
             }]"""
         )
-        print("parse parameter value of boolean")
+        println("parse parameter value of boolean")
         assertTrue(
             "[name param=true param2=false]" runEq """[{
                 type: 'content',
@@ -132,7 +192,7 @@ class StoryScriptTest {
                 }
             }]"""
         )
-        print("parse parameter value of null")
+        println("parse parameter value of null")
         assertTrue(
             "[name param=null param2=false]" runEq """[{
                 type: 'content',
@@ -144,7 +204,7 @@ class StoryScriptTest {
                 }
             }]"""
         )
-        print("parse parameter value of array")
+        println("parse parameter value of array")
         assertTrue(
             "[name param1=[1,2,null,4] param2=[1,false,\"test\",[1,2,null]]]" runEq """[{
                 type: 'content',
@@ -168,7 +228,7 @@ class StoryScriptTest {
 //            });
 
 
-        print("parse multi lines")
+        println("parse multi lines")
         assertTrue(
             """
             [name param=123]
@@ -182,7 +242,7 @@ class StoryScriptTest {
 
     @Test
     fun testLogicScript() {
-        print("parse IF-ELSEIF-ELSE")
+        println("parse IF-ELSEIF-ELSE")
 
         assertTrue(
             """
@@ -196,22 +256,24 @@ class StoryScriptTest {
             [name flagC]
             """ runEq """[
                 {
-                    type: 'logic', name: 'if',
+                    type: 'logic', 
+                    name: 'if',
                     conditions: [
-                    { type: 'expression', value: { left: { type: 'variable', prefix: null, value: 'x' }, operator: '>', right: { type: 'value', value: 1 } }},
-                    { type: 'expression', value: { left: { type: 'variable', prefix: null, value: 'y' }, operator: '==', right: { type: 'value', value: 2 } }},
-                    { type: 'expression', value: { left: { type: 'variable', prefix: null, value: 'y' }, operator: '<=', right: { type: 'value', value: 300 } }}
+                        { type: 'expression', value: { left: { type: 'variable', prefix: null, value: 'x' }, operator: '>', right: { type: 'value', value: 1 } }},
+                        { type: 'expression', value: { left: { type: 'variable', prefix: null, value: 'y' }, operator: '==', right: { type: 'value', value: 2 } }},
+                        { type: 'expression', value: { left: { type: 'variable', prefix: null, value: 'y' }, operator: '<=', right: { type: 'value', value: 300 } }}
                     ],
                     blocks: [
-                    [{ type: 'content', command: 'name', flags: ['flagA'], params: {} }],
-                    [],[],
-                    [{ type: 'content', command: 'name', flags: ['flagB'], params: {} }]
+                        [{ type: 'content', command: 'name', flags: ['flagA'], params: {} }],
+                        [],
+                        [],
+                        [{ type: 'content', command: 'name', flags: ['flagB'], params: {} }]
                     ]
                 },
                 { type: 'content', command: 'name', flags: ['flagC'], params: {} }
             ]"""
         )
-        print("parse WHILE")
+        println("parse WHILE")
         assertTrue(
             """
             [name flagA]
@@ -224,19 +286,19 @@ class StoryScriptTest {
                 {
                     type: 'logic', name: 'while',
                     condition: {
-                    type: 'expression',
-                    value: {
-                    left: { type: 'variable', prefix: null, value: 'x' },
-                    operator: '>',
-                    right: { type: 'value', value: 1 }
-                }
-                },
+                        type: 'expression',
+                        value: {
+                            left: { type: 'variable', prefix: null, value: 'x' },
+                            operator: '>',
+                            right: { type: 'value', value: 1 }
+                        }
+                    },
                     block: [{ type: 'content', command: 'name', flags: ['flagB'], params: {} }]
                 },
                 { type: 'content', command: 'name', flags: ['flagC'], params: {} }
             ]"""
         )
-        print("parse FOREACH")
+        println("parse FOREACH")
         assertTrue(
             """
             [name flagA]
@@ -255,7 +317,7 @@ class StoryScriptTest {
                 { type: 'content', command: 'name', flags: ['flagC'], params: {} }
             ]"""
         )
-        print("parse LET")
+        println("parse LET")
         assertTrue(
             """
             [name flagA]
@@ -294,7 +356,7 @@ class StoryScriptTest {
             ]"""
         )
 
-        print("parse computation")
+        println("parse computation")
         assertTrue(
             """#let x = 1 - 22.3 + 4""" runEq """[{
                 type: "logic",
@@ -374,7 +436,7 @@ class StoryScriptTest {
                 }
             ]"""
         )
-        print("parse complex logic expression")
+        println("parse complex logic expression")
         assertTrue(
             """
             #while x > 1 + 1 && ((x == 'test' || y >= 30) && a) || (b + 2) * -10
