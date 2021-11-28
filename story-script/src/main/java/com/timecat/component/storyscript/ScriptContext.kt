@@ -42,10 +42,10 @@ class Return(var done: Boolean, var value: ScriptContext) {
             val obj = JSONObject(map)
             val done = obj.getBoolean("done") ?: false
             val value = obj.getJSONObject("value") ?: JSONObject()
-            val command = value.getString("command")
+            val command = value.getString("command") ?: ""
             val flags = value.getStringList("flags")
             val params = value.getParamsMap("params")
-            val isBreak = value.getBoolean("break")
+            val isBreak = value.getBoolean("break") ?: false
             val ctx = ScriptContext(command, flags, params, isBreak)
             return Return(done, ctx)
         }

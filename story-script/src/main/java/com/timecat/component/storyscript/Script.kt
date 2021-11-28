@@ -290,6 +290,7 @@ class Script(
         LogUtil.se(stepRet)
         LogUtil.se("${stepRet!!::class}")
         var ret = (stepRet as? Map<String, Any?>)?.let { Return.fromMap(it) } ?: return
+        LogUtil.se(ret)
 
         while (!ret.done) {
             val context = ret.value
@@ -324,11 +325,12 @@ class Script(
             }
             stepRet = this.parser.next()
             ret = (stepRet as? Map<String, Any?>)?.let { Return.fromMap(it) } ?: break
+            LogUtil.se(ret)
         }
         if (ret.done) {
             this.isAuto = false
             this.isSkip = false
-            Log.i("exec", "Script executed to end.")
+            LogUtil.se("Script executed to end.")
         }
     }
 
