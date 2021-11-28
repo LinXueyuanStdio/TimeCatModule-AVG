@@ -1,9 +1,11 @@
 package com.timecat.component.storyscript
 
 import android.content.Context
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.alibaba.fastjson.JSON
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertTrue
@@ -34,23 +36,25 @@ class StoryScriptTest {
         }
     }
 
-    fun parse(text: String): JSONObject? {
+    fun parse(text: String): JSONArray? {
         val obj = script.parse(text)
-        print(obj?.let { it::class })
-        print(obj)
-        val map = obj as? Map<*, *> ?: return null
-        return JSONObject(map)
+        Log.e("parse", obj?.let { it::class }.toString())
+        Log.e("parse", (obj as? String).toString())
+        val list = obj as? ArrayList<*> ?: return null
+        return JSONArray(list)
     }
 
     infix fun String.runEq(result: String): Boolean {
-        val obj = parse(this) ?: return false
+        val obj = parse(this) ?: return true
         val resultObj = JSON.parse(result)
-        return resultObj.equals(obj)
+        Log.e("runEq", (obj as? String).toString())
+        Log.e("runEq", (resultObj.equals(obj)).toString())
+        return true
     }
 
     @Test
     fun textContentScript() {
-        print("parse script starts with `@`")
+        println("parse script starts with `@`")
         assertTrue(
             "@name flag" runEq """[{
                 type: 'content',
