@@ -1,16 +1,14 @@
 package com.timecat.component.storyscript
 
 import android.content.Context
-import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.alibaba.fastjson.JSON
 import org.json.JSONObject
 import org.junit.After
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-
-import org.junit.Assert.*
 import org.junit.runner.RunWith
 
 /**
@@ -27,9 +25,9 @@ class StoryScriptTest {
 
     @Before
     fun setUp() {
-        script = StoryScript(context, object :IScript{
+        script = StoryScript(context, object : IScript {
             override fun handleGlobalChanged() {
-                Log.e("handleGlobalChanged", "handleGlobalChanged")
+                print("handleGlobalChanged")
             }
         }).also {
             it.onCreate()
@@ -40,7 +38,8 @@ class StoryScriptTest {
         val obj = script.parse(text)
         print(obj?.let { it::class })
         print(obj)
-        return null
+        val map = obj as? Map<*, *> ?: return null
+        return JSONObject(map)
     }
 
     infix fun String.runEq(result: String): Boolean {
