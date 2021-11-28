@@ -12,6 +12,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.math.BigDecimal
 
 /**
  * @author 林学渊
@@ -47,34 +48,9 @@ class StoryScriptTest {
     fun JSONObject.eq(indent: String = "", target: JSONObject): Boolean {
         val nextIndent = "$indent  "
         for ((k, v) in innerMap) {
-            val value = target.get(k) ?: return false
-
-            val isEqual = when (v) {
-                is JSONObject -> {
-                    (value is JSONObject && v.eq(nextIndent, value))
-                        ||
-                        (value is Map<*, *> && v.eq(nextIndent, JSONObject(value as Map<String, *>)))
-                }
-                is JSONArray -> {
-                    (value is JSONArray && v.eq(nextIndent, value))
-                        ||
-                        (value is List<*> && v.eq(nextIndent, JSONArray(value)))
-                }
-                is List<*> -> {
-                    (value is JSONArray && JSONArray(v).eq(nextIndent, value))
-                        ||
-                        (value is List<*> && JSONArray(v).eq(nextIndent, JSONArray(value)))
-                }
-                is Map<*, *> -> {
-                    (value is JSONObject && JSONObject(v as Map<String, *>).eq(nextIndent, value))
-                        ||
-                        (value is Map<*, *> && JSONObject(v as Map<String, *>).eq(nextIndent, JSONObject(value as Map<String, *>)))
-                }
-                else -> {
-                    v == value
-                }
-            }
-            println("${nextIndent}at [${k}] {${v}}(${v::class.java}) ==${isEqual}== {${value}}(${value::class.java})")
+            val value = target.get(k)
+            val isEqual = v.eq(nextIndent, value)
+            printKV(nextIndent, isEqual, k, v, value)
             if (!isEqual) {
                 return false
             }
@@ -82,38 +58,79 @@ class StoryScriptTest {
         return true
     }
 
+    fun printKV(nextIndent: String, isEqual: Boolean, k: Any, v: Any?, value: Any?) {
+        println("${nextIndent}at [${k}] ${v}(${if (v == null) null else v::class.java}) ==${isEqual}== ${value}(${if (value == null) null else value::class.java})")
+    }
+
+    fun Any?.eq(nextIndent: String, target: Any?): Boolean {
+        val v = this
+        val value = target
+        return when (v) {
+            is JSONObject -> {
+                (value is JSONObject && v.eq(nextIndent, value))
+                    ||
+                    (value is Map<*, *> && v.eq(nextIndent, JSONObject(value as Map<String, *>)))
+            }
+            is JSONArray -> {
+                (value is JSONArray && v.eq(nextIndent, value))
+                    ||
+                    (value is List<*> && v.eq(nextIndent, JSONArray(value)))
+            }
+            is List<*> -> {
+                (value is JSONArray && JSONArray(v).eq(nextIndent, value))
+                    ||
+                    (value is List<*> && JSONArray(v).eq(nextIndent, JSONArray(value)))
+            }
+            is Map<*, *> -> {
+                (value is JSONObject && JSONObject(v as Map<String, *>).eq(nextIndent, value))
+                    ||
+                    (value is Map<*, *> && JSONObject(v as Map<String, *>).eq(nextIndent, JSONObject(value as Map<String, *>)))
+            }
+            else -> {
+                if (v == null && value == null) {
+                    true
+                } else if (v is BigDecimal) {
+                    if (value is Double) {
+                        v.toDouble() - value == 0.0
+                    } else if (value is Int) {
+                        v.toInt() - value == 0
+                    } else if (value is BigDecimal) {
+                        v == value
+                    } else {
+                        v.toString() == value.toString()
+                    }
+                } else if (v is Double) {
+                    if (value is Double) {
+                        v.toDouble() - value == 0.0
+                    } else if (value is Int) {
+                        v.toInt() - value == 0
+                    } else if (value is BigDecimal) {
+                        v.toDouble() - value.toDouble() == 0.0
+                    } else {
+                        v.toString() == value.toString()
+                    }
+                } else if (v is Int) {
+                    if (value is Double) {
+                        v.toDouble() - value == 0.0
+                    } else if (value is Int) {
+                        v.toInt() - value == 0
+                    } else {
+                        v.toString() == value.toString()
+                    }
+                } else {
+                    v == value
+                }
+            }
+        }
+    }
+
     fun JSONArray.eq(indent: String = "", target: JSONArray): Boolean {
         if (size == 0) return target.size == 0
         val nextIndent = "$indent  "
         return mapIndexed { index, v ->
-            val value = target[index] ?: false
-            val v = v ?: false
-            val isEqual = when (v) {
-                is JSONObject -> {
-                    (value is JSONObject && v.eq(nextIndent, value))
-                        ||
-                        (value is Map<*, *> && v.eq(nextIndent, JSONObject(value as Map<String, *>)))
-                }
-                is JSONArray -> {
-                    (value is JSONArray && v.eq(nextIndent, value))
-                        ||
-                        (value is List<*> && v.eq(nextIndent, JSONArray(value)))
-                }
-                is List<*> -> {
-                    (value is JSONArray && JSONArray(v).eq(nextIndent, value))
-                        ||
-                        (value is List<*> && JSONArray(v).eq(nextIndent, JSONArray(value)))
-                }
-                is Map<*, *> -> {
-                    (value is JSONObject && JSONObject(v as Map<String, *>).eq(nextIndent, value))
-                        ||
-                        (value is Map<*, *> && JSONObject(v as Map<String, *>).eq(nextIndent, JSONObject(value as Map<String, *>)))
-                }
-                else -> {
-                    v == value
-                }
-            }
-            println("${nextIndent}at [${index}] {${v}}(${v::class.java}) ==${isEqual}== {${value}}(${value::class.java})")
+            val value = target[index]
+            val isEqual = v.eq(nextIndent, value)
+            printKV(nextIndent, isEqual, index, v, value)
             isEqual
         }.all { it }
     }
@@ -127,7 +144,7 @@ class StoryScriptTest {
         println(resultObj.toString())
         println("runEq")
         println(resultObj.eq("", obj).toString())
-        return true
+        return resultObj.eq("", obj)
     }
 
     @Test
@@ -207,7 +224,7 @@ class StoryScriptTest {
     fun test6() {
         println("parse parameter value of number")
         assertTrue(
-            "[name param1=123 param2=00123 param3=0x123 param4=-10 param5=+0x20 param6=10.02 param7=.4]" runEq """[{
+            """[name param1=123 param2=00123 param3=0x123 param4=-10 param5=+0x20 param6=10.02 param7=.4]""" runEq """[{
                 type: 'content',
                 command: 'name',
                 flags: [],
