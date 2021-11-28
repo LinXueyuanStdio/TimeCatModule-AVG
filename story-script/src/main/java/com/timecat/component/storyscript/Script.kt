@@ -22,7 +22,7 @@ class Script(
     val core: IEventCore,
 ) : IScript, LifecycleOwner {
     val parser = StoryScript(context, this)
-    var macros = mutableMapOf<String, (List<String>,Map<String, Any?>)->Unit>()
+    var macros = mutableMapOf<String, (List<String>, Map<String, Any?>) -> Unit>()
     var macroKeys = mutableListOf<Any>()
     var scriptName: String? = null
     var loading = false
@@ -36,32 +36,32 @@ class Script(
     fun initStoryScript() {
         parser.onCreate()
         parser.onStoryScriptCreate()
-        observeEvent<ScriptEvent.Init>(Dispatchers.IO) {
+        observeEvent<ScriptEvent.Init>(core, this, Dispatchers.IO) {
             registerEventObservers()
         }
     }
 
     private fun registerEventObservers() {
-        observeEvent<ScriptEvent.Load>(Dispatchers.IO) {
+        observeEvent<ScriptEvent.Load>(core, this, Dispatchers.IO) {
             script_load(it.name, it.autoStart, it.next)
         }
-        observeEvent<ScriptEvent.Trigger>(Dispatchers.IO) {
+        observeEvent<ScriptEvent.Trigger>(core, this, Dispatchers.IO) {
             script_trigger(it.DONOTSTOPAUTOORSKIP, it.next)
         }
-        observeEvent<ScriptEvent.Exec>(Dispatchers.IO) {
+        observeEvent<ScriptEvent.Exec>(core, this, Dispatchers.IO) {
             script_exec(it.command, it.flags, it.params, it.next)
         }
-        observeEvent<ScriptEvent.Mode>(Dispatchers.IO) {
+        observeEvent<ScriptEvent.Mode>(core, this, Dispatchers.IO) {
             script_mode(it.mode)
         }
-        observeEvent<StoreEvent.SaveArchive>(Dispatchers.IO) {
+        observeEvent<StoreEvent.SaveArchive>(core, this, Dispatchers.IO) {
             script_save_archive(it.saveScene, it.next)
         }
-        observeEvent<StoreEvent.LoadArchive>(Dispatchers.IO) {
+        observeEvent<StoreEvent.LoadArchive>(core, this, Dispatchers.IO) {
             script_load_archive(it.loadScene(), it.next)
         }
         core.postEvent(StoreEvent.LoadGlobal())
-        observeEvent<StoreEvent.SaveGlobal>(Dispatchers.IO) {
+        observeEvent<StoreEvent.SaveGlobal>(core, this, Dispatchers.IO) {
             save_global(it.next)
         }
     }

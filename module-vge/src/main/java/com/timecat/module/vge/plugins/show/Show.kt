@@ -25,7 +25,7 @@ class Show(
 ) : LifecycleOwner {
 
     fun initShow() {
-        observeEvent<ScriptEvent.Exec>(Dispatchers.Main) {
+        observeEvent<ScriptEvent.Exec>(core, this, Dispatchers.Main) {
             container.Body("command = ${it.command}\nflags = ${it.flags}\nparams = ${it.params}")
         }
     }
