@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModelStore
 import com.timecat.component.storyscript.IEventCore
 import com.timecat.component.storyscript.Script
 import com.timecat.layout.ui.business.form.Body
-import com.timecat.layout.ui.business.form.Next
 import com.timecat.middle.setting.BaseSettingActivity
 
 /**

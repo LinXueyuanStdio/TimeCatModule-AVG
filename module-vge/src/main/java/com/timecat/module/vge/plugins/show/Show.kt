@@ -1,0 +1,27 @@
+package com.timecat.module.vge.plugins.show
+
+import android.content.Context
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import com.timecat.component.storyscript.IEventCore
+
+/**
+ * @author 林学渊
+ * @email linxy59@mail2.sysu.edu.cn
+ * @date 2021/11/28
+ * @description null
+ * @usage null
+ */
+class Show(
+    val context: Context,
+    val core: IEventCore,
+) : LifecycleOwner {
+
+    //region LifecycleOwner
+    private val mLifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
+    override fun getLifecycle(): Lifecycle {
+        return mLifecycleRegistry
+    }
+    //endregion
+}
