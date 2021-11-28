@@ -2,7 +2,18 @@ apply from: "${gradle.ext.localGradleDir}/project/fake.gradle"
 
 android {
     ndkVersion "21.3.6528147"
-    buildFeatures{
+    compileSdkVersion 31
+    defaultConfig {
+//        targetSdkVersion 31
+//        configurations.all {
+//            resolutionStrategy { force 'androidx.core:core-ktx:1.6.0' }
+//            resolutionStrategy { force 'androidx.core:core:1.6.0' }
+//        }
+    }
+    packagingOptions {
+        pickFirst '**/*.so'
+    }
+    buildFeatures {
         dataBinding = true
         // viewBinding = true
     }

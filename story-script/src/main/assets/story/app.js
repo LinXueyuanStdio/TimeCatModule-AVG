@@ -2,12 +2,11 @@
     nativeLoggingHook('launching js-engine', 1);
 
     global.StoryParser = new StoryScript().rawParse;
-    global.onStoryScriptCreate = function(IScript) {
+    global.onStoryScriptCreate = function(args, callback) {
         const fn = function() {
-            IScript.handleGlobalChanged();
+            callback("handleGlobalChanged");
         }
         global.story = new StoryScript(fn);
-        return handleGlobalChanged;
     }
     global.StoryNext = function() {
         global.story.next();

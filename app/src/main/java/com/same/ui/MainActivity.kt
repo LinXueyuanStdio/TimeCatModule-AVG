@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import com.timecat.component.commonsdk.utils.override.LogUtil
+import com.timecat.component.storyscript.EventBusInitializer
 import com.timecat.component.storyscript.IScript
 import com.timecat.component.storyscript.StoryScript
 import com.timecat.module.vge.page.StoryActivity
@@ -70,6 +71,7 @@ class MainActivity : Activity() {
         // ┆ {CURRENTBLOCK={data=[{condition={type=expression, value={left={type=expression, value={left={prefix=null, type=variable, value=x}, right={type=expression, value={left={type=value, value=1.0}, right={type=value, value=1.0}, operator=+}}, operator=>}}, right={type=expression, value={left={type=expression, value={left={type=expression, value={left={type=expression, value={left={prefix=null, type=variable, value=x}, right={type=value, value=test}, operator===}}, right={type=expression, value={left={prefix=null, type=variable, value=y}, right={type=value, value=30.0}, operator=>=}}, operator=||}}, right={prefix=null, type=variable, value=a}, operator=&&}}, right={type=expression, value={left={type=expression, value={left={prefix=null, type=variable, value=b}, right={type=value, value=2.0}, operator=+}}, right={type=expression, value={left={type=value, value=0.0}, right={type=value, value=10.0}, operator=-}}, operator=*}}, operator=||}}, operator=&&}}, name=while, block=[{flags=[], type=content, params={}, command=name}, {flags=[], type=content, params={raw={type=value, value=这是一句话，哈哈~！}}, command=*}, {flags=[flagB], type=content, params={}, command=name}, {flags=[], type=content, params={raw={type=value, value=Some words!}}, command=*}], type=logic}], done=false, currentLine=0.0}, BLOCKSTACK=[]}
         // └──────────────────────────────────────────────────────────────────────────
         setContentView(linearLayout)
+        EventBusInitializer.init(application)
     }
 
     override fun onDestroy() {

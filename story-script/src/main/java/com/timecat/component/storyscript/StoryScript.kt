@@ -5,6 +5,7 @@ import android.util.Log
 import com.alibaba.fastjson.JSONArray
 import com.timecat.component.engine.js.Bridge
 import com.timecat.component.engine.js.HermesRuntime
+import com.timecat.component.engine.js.JSCallback
 import java.io.IOException
 import java.io.InputStream
 import java.nio.charset.Charset
@@ -48,6 +49,7 @@ class StoryScript(
         val list = obj as? ArrayList<*> ?: return null
         return JSONArray(list)
     }
+
     fun load(script: String): Any? {
         return evalSync("StoryLoad", script)
     }
@@ -56,8 +58,12 @@ class StoryScript(
         return evalSync("StoryNext")
     }
 
-    fun onStoryScriptCreate(): Any? {
-        return evalSync("onStoryScriptCreate", handleGlobalChanged)
+    fun onStoryScriptCreate() {
+        bridge.callJSFunction("onStoryScriptCreate", false, object : JSCallback() {
+            override fun invoke(`object`: Any?) {
+                handleGlobalChanged.handleGlobalChanged()
+            }
+        })
     }
 
     fun onDestroy() {

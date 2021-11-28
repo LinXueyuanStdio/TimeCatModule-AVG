@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -306,7 +307,6 @@ class Script(
             }
             ret = this.parser.next() as? Return ?: return
         }
-        1 to 3
         if (ret.done) {
             this.isAuto = false
             this.isSkip = false
@@ -332,8 +332,9 @@ class Script(
     }
 
     //region LifecycleOwner
+    private val mLifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
     override fun getLifecycle(): Lifecycle {
-        TODO("Not yet implemented")
+        return mLifecycleRegistry
     }
     //endregion
 }

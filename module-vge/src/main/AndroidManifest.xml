@@ -3,8 +3,12 @@
     package="com.timecat.module.vge">
 
     <application>
-        <activity android:name=".page.VgeActivity" />
-        <activity android:name=".page.StoryActivity" />
+        <activity
+            android:name=".page.VgeActivity"
+            android:exported="true" />
+        <activity
+            android:name=".page.StoryActivity"
+            android:exported="true" />
     </application>
 
 </manifest>
