@@ -1,6 +1,13 @@
 package com.timecat.component.storyscript
 
 import android.content.Context
+import android.util.Log
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 
 /**
  * @author 林学渊
@@ -11,30 +18,59 @@ import android.content.Context
  */
 class Script(
     val context: Context,
-    val core: IEngineCore,
-) : IScript {
+    val core: IEventCore,
+) : IScript, LifecycleOwner {
     val parser = StoryScript(context, this)
     var macros = {}
     var macroKeys = mutableListOf<Any>()
-    var scriptName = null
+    var scriptName: String? = null
     var loading = false
     var waiting = false
+    var script: String? = ""
 
     var isSkip = false
     var isAuto = false
-    var autoInterval = 1000
+    var autoInterval: Long = 1000
 
     fun initStoryScript() {
         parser.onCreate()
         parser.onStoryScriptCreate()
+        observeEvent<ScriptEvent.Init>(Dispatchers.IO) {
+            registerEventObservers()
+        }
     }
 
-    suspend fun script_load() {
-        load()
+    fun registerEventObservers() {
+        observeEvent<ScriptEvent.Load>(Dispatchers.IO) {
+            script_load(it.name, it.autoStart, it.next)
+        }
+        observeEvent<ScriptEvent.Trigger>(Dispatchers.IO) {
+            script_trigger(it.DONOTSTOPAUTOORSKIP, it.next)
+        }
+        observeEvent<ScriptEvent.Exec>(Dispatchers.IO) {
+            script_exec(it.command, it.flags, it.params, it.next)
+        }
+        observeEvent<ScriptEvent.Mode>(Dispatchers.IO) {
+            script_mode(it.mode)
+        }
+        observeEvent<StoreEvent.SaveArchive>(Dispatchers.IO) {
+            script_save_archive(it.saveScene, it.next)
+        }
+        observeEvent<StoreEvent.LoadArchive>(Dispatchers.IO) {
+            script_load_archive(it.loadScene(), it.next)
+        }
+        core.postEvent(StoreEvent.LoadGlobal())
+        observeEvent<StoreEvent.SaveGlobal>(Dispatchers.IO) {
+            save_global(it.next)
+        }
     }
 
-    fun script_trigger() {
-        trigger()
+    suspend fun script_load(name: String, autoStart: Boolean, next: suspend () -> Unit) {
+        load(name, autoStart, next)
+    }
+
+    suspend fun script_trigger(DONOTSTOPAUTOORSKIP: Boolean, next: suspend () -> Unit) {
+        trigger(DONOTSTOPAUTOORSKIP, next)
     }
 
 //    /**
@@ -56,34 +92,44 @@ class Script(
     /**
      * listen script execute
      */
-    suspend fun script_exec(ctx: ScriptContext, next:suspend () -> Unit) {
-        val (command, flags, params) = ctx
-
+    suspend fun script_exec(
+        command: String,
+        flags: List<String>,
+        params: Map<String, Any?>,
+        next: suspend () -> Unit
+    ) {
         if (command == "story") {
-            if (flags.contains("goto")) {
-                this.script = params.name;
-                await this.load({ name: params.name, autoStart: true }, next);
-                // await this.beginStory();
-            } else if (flags.contains("save")) {
-                const name = params.name || 'default';
-                const extra = Object.assign({}, params);
-
-                delete extra.name;
-                await core.post('save-archive', { name, extra });
-            } else if (flags.includes("load")) {
-                const name = params.name || 'default';
-
-                await core.post('load-archive', { name });
-            } else if (flags.contains("mode")) {
-                this.isAuto = false
-                this.isSkip = false
-                if (flags.contains("auto")) {
-                    this.autoInterval = params.interval || this.autoInterval;
-                    this.isAuto = true
-                } else if (flags.contains("skip")) {
-                    this.isSkip = true
-                } else if (flags.contains("normal")) {
-                    // do nothing
+            when {
+                "goto" in flags -> {
+                    val name = params["name"] as? String ?: ""
+                    this.script = name
+                    this.load(name, true, next)
+                    // await this.beginStory()
+                }
+                "save" in flags -> {
+                    val name = params["name"] as? String ?: "default"
+                    val extra = params
+                    core.postEvent(StoreEvent.SaveArchive(name, extra))
+                }
+                "load" in flags -> {
+                    val name = params["name"] as? String ?: "default"
+                    core.postEvent(StoreEvent.LoadArchive(name, { Scene() }))
+                }
+                "mode" in flags -> {
+                    this.isAuto = false
+                    this.isSkip = false
+                    when {
+                        "auto" in flags -> {
+                            this.autoInterval = params["interval"] as? Long ?: this.autoInterval
+                            this.isAuto = true
+                        }
+                        "skip" in flags -> {
+                            this.isSkip = true
+                        }
+                        "normal" in flags -> {
+                            // do nothing
+                        }
+                    }
                 }
             }
         } else {
@@ -91,47 +137,178 @@ class Script(
         }
     }
 
-    fun script_set_autointerval() {
-
+    fun script_set_autointerval(autoInterval: Long?) {
+        this.autoInterval = autoInterval ?: this.autoInterval
     }
 
-    fun script_get_autointerval() {
-
+    fun script_get_autointerval(): Long {
+        return autoInterval
     }
 
-    fun script_mode() {
-
+    fun script_mode(mode: String) {
+        this.isAuto = false
+        this.isSkip = false
+        when (mode) {
+            "auto" -> {
+                this.isAuto = true
+                core.postEvent(ScriptEvent.Trigger(true))
+            }
+            "skip" -> {
+                this.isSkip = true
+                core.postEvent(ScriptEvent.Trigger(true))
+            }
+            else -> {
+                core.postEvent(ScriptEvent.Trigger(false))
+            }
+        }
     }
 
-    fun script_save_archive() {
+    /**
+     * saveScene = {
+     *     ctx.data.$$scene = $$scene
+     * }
+     */
+    suspend fun script_save_archive(saveScene: (Scene) -> Unit, next: suspend () -> Unit) {
+        // const { blocks, saveScope } = this.parser.getData()
+        val blocks = this.parser.getBlockData()
+        val saveScope = this.parser.getSaveScope()
+        val scene = Scene(
+            script = this.scriptName,
+            blocks,
+            saveScope,
+            autoInterval = this.autoInterval,
+        )
 
+        saveScene(scene)
+        // ctx.globalData.$$scene = { globalScope }
+        next()
     }
 
-    fun script_load_archive() {
+    suspend fun script_load_archive(scene: Scene, next: suspend () -> Unit) {
+        val (script, blocks, saveScope, autoInterval) = scene
 
+        this.load(script, false, {})
+        this.parser.setSaveScope(saveScope)
+        this.parser.setBlockData(blocks)
+        this.autoInterval = autoInterval
+        next()
     }
 
-    fun load_global() {
-
+    /**
+     * save global variables once any of them changed
+     */
+    suspend fun save_global(next: suspend () -> Unit) {
+//        const globalScope = this.parser.getGlobalScope()TODO
+//
+//        ctx.globalData.$$scene = { globalScope }TODO
+        next()
     }
 
-    fun save_global() {
+    suspend fun load(name: String?, autoStart: Boolean, next: suspend () -> Unit) {
+        val scriptName = name
 
+        if (scriptName != null) {
+            val assetsPath = core.getAssetsPath()
+            val scriptFile = "${assetsPath}${scriptName}.tcs"
+            val scriptConfig = "${assetsPath}${scriptName}.json"
+
+            this.loading = true
+            // this.props.onLoading && this.props.onLoading()
+            core.postEvent(ScriptEvent.Loading)
+            coroutineScope {
+                val task1 = async {
+                    val text = core.readFile(scriptConfig)
+                    core.loadAssets(text)
+                    true
+                }
+                val task2 = async {
+                    val text = core.readFile(scriptFile)
+                    parser.load(text.trim())
+                    true
+                }
+                task1.await() && task2.await()
+            }
+            this.scriptName = scriptName
+
+            // this.props.onLoadingComplete && this.props.onLoadingComplete()
+            core.postEvent(ScriptEvent.Loaded)
+            this.loading = false
+
+            next()
+
+            if (autoStart) {
+                beginStory()
+            }
+        } else {
+            Log.e("", "You must pass a script url")
+            next()
+        }
     }
 
-    suspend fun load() {
+    suspend fun beginStory() {
+        var ret = this.parser.next() as? Return ?: return
 
+        while (!ret.done) {
+            val context = ret.value
+
+            if (this.isSkip) {
+                context.flags.add("_skip_")
+            }
+
+            if (this.isAuto) {
+                context.flags.add("_auto_")
+            }
+
+            this.waiting = true
+            core.postEvent(
+                ScriptEvent.Exec(
+                    context.command,
+                    context.flags,
+                    context.params,
+                )
+            )
+            this.waiting = false
+
+            if (context.isBreak && this.isAuto) {
+                delay(this.autoInterval)
+                return core.postEvent(ScriptEvent.Trigger(true))
+            } else if (context.isBreak && this.isSkip) {
+                // avoid executing to the end directly...
+                delay(80)
+                return core.postEvent(ScriptEvent.Trigger(true))
+            } else if (context.isBreak) {
+                break
+            }
+            ret = this.parser.next() as? Return ?: return
+        }
+        1 to 3
+        if (ret.done) {
+            this.isAuto = false
+            this.isSkip = false
+            Log.i("exec", "Script executed to end.")
+        }
     }
 
-    fun beginStory() {
-
-    }
-
-    fun trigger() {
-
+    private suspend fun trigger(DONOTSTOPAUTOORSKIP: Boolean = false, next: suspend () -> Unit) {
+        next()
+        if (!loading) {
+            if (!DONOTSTOPAUTOORSKIP) {
+                isAuto = false
+                isSkip = false
+            }
+            if (!waiting) {
+                beginStory()
+            }
+        }
     }
 
     override fun handleGlobalChanged() {
-
+        core.postEvent(StoreEvent.SaveGlobal(mapOf()))
     }
+
+    //region LifecycleOwner
+    override fun getLifecycle(): Lifecycle {
+        TODO("Not yet implemented")
+    }
+    //endregion
 }

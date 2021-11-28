@@ -39,6 +39,14 @@ class StoryScript(
         return evalSync("StoryParser", script)
     }
 
+    fun load(script: String): Any? {
+        return evalSync("StoryLoad", script)
+    }
+
+    fun next(): Any? {
+        return evalSync("StoryNext")
+    }
+
     fun onStoryScriptCreate(): Any? {
         return evalSync("onStoryScriptCreate", handleGlobalChanged)
     }
@@ -61,6 +69,20 @@ class StoryScript(
             ex.printStackTrace()
         }
         return js
+    }
+
+    fun setSaveScope(saveScope: Scene?) {
+    }
+
+    fun setBlockData(blocks: Scene?) {
+    }
+
+    fun getSaveScope(): Scene? {
+        TODO("Not yet implemented")
+    }
+
+    fun getBlockData(): Scene? {
+        TODO("Not yet implemented")
     }
 }
 

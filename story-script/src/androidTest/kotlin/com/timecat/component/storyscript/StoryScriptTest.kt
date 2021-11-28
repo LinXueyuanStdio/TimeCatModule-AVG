@@ -1,6 +1,7 @@
 package com.timecat.component.storyscript
 
 import android.content.Context
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.alibaba.fastjson.JSON
@@ -26,7 +27,11 @@ class StoryScriptTest {
 
     @Before
     fun setUp() {
-        script = StoryScript(context).also {
+        script = StoryScript(context, object :IScript{
+            override fun handleGlobalChanged() {
+                Log.e("handleGlobalChanged", "handleGlobalChanged")
+            }
+        }).also {
             it.onCreate()
         }
     }
