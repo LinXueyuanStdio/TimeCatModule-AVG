@@ -8,7 +8,7 @@
         }
         global.story = new StoryScript(fn);
     }
-    global.StoryNext = function() {
+    global.StoryNext = function(args) {
         global.story.next();
     }
     global.StoryLoad = function(scriptString) {

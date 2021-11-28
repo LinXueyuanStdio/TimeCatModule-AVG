@@ -29,6 +29,7 @@ class StoryActivity : BaseSettingActivity() {
         override suspend fun readFile(filename: String): String {
             LogUtil.se("read ${filename}")
             val text = assets.open(filename).bufferedReader().use { it.readText() }
+            LogUtil.se("    -> ${text}")
             return text
         }
 
@@ -47,6 +48,11 @@ class StoryActivity : BaseSettingActivity() {
 
     override fun addSettingItems(container: ViewGroup) {
         val story = Script(this, core)
+        story.initStoryScript()
+
+        val show = Show(this, core, container)
+        show.initShow()
+
         val storyScript = """
             [bg file='chapters/1/1_bg_pre.png']
         
@@ -79,10 +85,6 @@ class StoryActivity : BaseSettingActivity() {
         
             [router push path='/story/2']
         """
-        story.initStoryScript()
-
-        val show = Show(this, core, container)
-        show.initShow()
 
 //        val jsonArray = story.parser.parse2JSONArray(storyScript)
 //        if (jsonArray == null) {
@@ -93,7 +95,7 @@ class StoryActivity : BaseSettingActivity() {
 //            container.Body("${i}")
 //        }
 
-        core.postEvent(ScriptEvent.Init)
+        core.postEvent(ScriptEvent.Init, 1*1000)
         core.postEvent(ScriptEvent.Load("scripts/1", true), 3 * 1000)
     }
 }

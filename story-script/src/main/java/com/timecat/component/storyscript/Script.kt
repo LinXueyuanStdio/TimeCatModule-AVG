@@ -2,9 +2,7 @@ package com.timecat.component.storyscript
 
 import android.content.Context
 import android.util.Log
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
+import com.timecat.component.commonsdk.utils.override.LogUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -37,39 +35,47 @@ class Script(
         parser.onCreate()
         parser.onStoryScriptCreate()
         core.observeEvent<ScriptEvent.Init>(Dispatchers.IO) {
-            Log.e("script", "ScriptEvent.Init")
+            LogUtil.se("ScriptEvent.Init")
             registerEventObservers()
         }
     }
 
     private fun registerEventObservers() {
         core.observeEvent<ScriptEvent.Load>(Dispatchers.IO) {
-            Log.e("script", "ScriptEvent.Load")
+            LogUtil.se("ScriptEvent.Load")
             script_load(it.name, it.autoStart, it.next)
         }
         core.observeEvent<ScriptEvent.Trigger>(Dispatchers.IO) {
-            Log.e("script", "ScriptEvent.Trigger")
+            LogUtil.se("ScriptEvent.Trigger")
             script_trigger(it.DONOTSTOPAUTOORSKIP, it.next)
         }
         core.observeEvent<ScriptEvent.Exec>(Dispatchers.IO) {
-            Log.e("script", "ScriptEvent.Exec")
+            LogUtil.se("ScriptEvent.Exec")
             script_exec(it.command, it.flags, it.params, it.next)
         }
+        core.observeEvent<ScriptEvent.SetAutoInterval>(Dispatchers.IO) {
+            LogUtil.se("ScriptEvent.SetAutoInterval")
+            script_set_autointerval(it.autoInterval ?: autoInterval)
+        }
+        core.observeEvent<ScriptEvent.GetAutoInterval>(Dispatchers.IO) {
+            LogUtil.se("ScriptEvent.GetAutoInterval")
+            script_get_autointerval(it.callback)
+        }
         core.observeEvent<ScriptEvent.Mode>(Dispatchers.IO) {
-            Log.e("script", "ScriptEvent.Mode")
+            LogUtil.se("ScriptEvent.Mode")
             script_mode(it.mode)
         }
         core.observeEvent<StoreEvent.SaveArchive>(Dispatchers.IO) {
-            Log.e("script", "ScriptEvent.SaveArchive")
+            LogUtil.se("ScriptEvent.SaveArchive")
             script_save_archive(it.saveScene, it.next)
         }
         core.observeEvent<StoreEvent.LoadArchive>(Dispatchers.IO) {
-            Log.e("script", "ScriptEvent.LoadArchive")
+            LogUtil.se("ScriptEvent.LoadArchive")
             script_load_archive(it.loadScene(), it.next)
         }
         core.postEvent(StoreEvent.LoadGlobal())
         core.observeEvent<StoreEvent.SaveGlobal>(Dispatchers.IO) {
-            Log.e("script", "ScriptEvent.SaveGlobal")
+            LogUtil.se("ScriptEvent.SaveGlobal")
             save_global(it.next)
         }
     }
@@ -171,12 +177,12 @@ class Script(
         }
     }
 
-    private fun script_set_autointerval(autoInterval: Long?) {
-        this.autoInterval = autoInterval ?: this.autoInterval
+    private fun script_set_autointerval(autoInterval: Long) {
+        this.autoInterval = autoInterval
     }
 
-    private fun script_get_autointerval(): Long {
-        return autoInterval
+    private fun script_get_autointerval(callback: (Long) -> Unit) {
+        callback(autoInterval)
     }
 
     private fun script_mode(mode: String) {
@@ -280,7 +286,10 @@ class Script(
     }
 
     private suspend fun beginStory() {
-        var ret = this.parser.next() as? Return ?: return
+        var stepRet = this.parser.next()
+        LogUtil.se(stepRet)
+        LogUtil.se("${stepRet!!::class}")
+        var ret = stepRet as? Return ?: return
 
         while (!ret.done) {
             val context = ret.value
@@ -313,7 +322,8 @@ class Script(
             } else if (context.isBreak) {
                 break
             }
-            ret = this.parser.next() as? Return ?: return
+            stepRet = this.parser.next()
+            ret = stepRet as? Return ?: return
         }
         if (ret.done) {
             this.isAuto = false

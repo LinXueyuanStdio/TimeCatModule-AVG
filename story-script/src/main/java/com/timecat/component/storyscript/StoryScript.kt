@@ -34,7 +34,7 @@ class StoryScript(
         }
     }
 
-    fun evalSync(functionName: String, args: Any? = null): Any? {
+    fun evalSync(functionName: String, args: Any? = "null"): Any? {
         return bridge.callJSFunctionSync(functionName, args)
     }
 

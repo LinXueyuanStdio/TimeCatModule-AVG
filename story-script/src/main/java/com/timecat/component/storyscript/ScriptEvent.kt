@@ -14,5 +14,7 @@ sealed class ScriptEvent(val next: suspend () -> Unit = {}) {
     class Load(val name: String, val autoStart: Boolean, next: suspend () -> Unit = {}) : ScriptEvent(next)
     class Trigger(val DONOTSTOPAUTOORSKIP: Boolean = false, next: suspend () -> Unit = {}) : ScriptEvent(next)
     class Mode(val mode: String) : ScriptEvent()
+    class SetAutoInterval(val autoInterval: Long?=null) : ScriptEvent()
+    class GetAutoInterval(val callback: (Long)->Unit) : ScriptEvent()
     class Exec(val command: String, val flags: List<String>, val params: Map<String, Any?>, next: suspend () -> Unit = {}) : ScriptEvent(next)
 }
