@@ -13,7 +13,7 @@ import kotlinx.coroutines.delay
  * @author 林学渊
  * @email linxy59@mail2.sysu.edu.cn
  * @date 2021/11/27
- * @description null
+ * @description 脚本，和核心交互
  * @usage null
  */
 class Script(
@@ -21,7 +21,7 @@ class Script(
     val core: IEventCore,
 ) : IScript, LifecycleOwner {
     val parser = StoryScript(context, this)
-    var macros = {}
+    var macros = mutableMapOf<String, (List<String>,Map<String, Any?>)->Unit>()
     var macroKeys = mutableListOf<Any>()
     var scriptName: String? = null
     var loading = false
@@ -85,8 +85,33 @@ class Script(
 //     * handle macros
 //     * 暂时不用实现
 //     */
-//    fun script_exec() {
+//    suspend fun script_exec2(
+//        command: String,
+//        flags: List<String>,
+//        params: Map<String, Any?>,
+//        next: suspend () -> Unit
+//    ) {
+//        next()
+//        if (command in macroKeys) {
+//            val func = this.macros[command] ?: return
+//            val macroData = func(flags, params)
 //
+//            val ss = this.parser
+//
+//            if (macroData is String) {
+//                ss.BLOCKSTACK.push(ss.CURRENTBLOCK)
+//                const blockData = parser.parse(macroData)
+//                const block = new InsertedBlock(blockData)
+//
+//                ss.CURRENTBLOCK = block
+//            } else {
+//                ss.BLOCKSTACK.push(ss.CURRENTBLOCK)
+//                const blockData = macroData
+//                const block = new InsertedBlock(blockData)
+//
+//                ss.CURRENTBLOCK = block
+//            }
+//        }
 //    }
 
     /**

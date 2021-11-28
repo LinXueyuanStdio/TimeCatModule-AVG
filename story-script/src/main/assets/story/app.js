@@ -15,7 +15,7 @@
     global.StoryLoad = function(scriptString) {
         global.story.load(scriptString);
     }
-    global.StorySetSaveScope = function(scriptString) {
-        global.story.load(scriptString);
+    global.StorySetSaveScope = function(saveScope) {
+        global.story.setSaveScope(saveScope);
     }
 })(this);
