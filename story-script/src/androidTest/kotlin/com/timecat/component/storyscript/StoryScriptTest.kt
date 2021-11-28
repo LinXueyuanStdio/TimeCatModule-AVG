@@ -132,6 +132,10 @@ class StoryScriptTest {
 
     @Test
     fun textContentScript() {
+    }
+
+    @Test
+    fun test1() {
         println("parse script starts with `@`")
         assertTrue(
             "@name flag" runEq """[{
@@ -142,6 +146,10 @@ class StoryScriptTest {
             }]
             """
         )
+    }
+
+    @Test
+    fun test2() {
         println("parse script wrapped with `[]`")
         assertTrue(
             "[name flag]" runEq """[{
@@ -151,6 +159,10 @@ class StoryScriptTest {
                 params: {}
             }]"""
         )
+    }
+
+    @Test
+    fun test3() {
         println("parse no parameter")
         assertTrue(
             "[name]" runEq """[{
@@ -160,6 +172,10 @@ class StoryScriptTest {
                 params: {}
             }]"""
         )
+    }
+
+    @Test
+    fun test4() {
         println("parse parameter value of ascii string")
         assertTrue(
             "[name param=\"string\"]" runEq """[{
@@ -169,6 +185,10 @@ class StoryScriptTest {
                 params: { param: { type: 'value', value: 'string' } }
             }]"""
         )
+    }
+
+    @Test
+    fun test5() {
         println("parse parameter value of non-ascii string")
         assertTrue(
             "[name param=\"中文测试,日本語の分析テスト\" param2=\'中a文s\\测**|/试%……%\']" runEq """[{
@@ -181,6 +201,10 @@ class StoryScriptTest {
                 }
             }]"""
         )
+    }
+
+    @Test
+    fun test6() {
         println("parse parameter value of number")
         assertTrue(
             "[name param1=123 param2=00123 param3=0x123 param4=-10 param5=+0x20 param6=10.02 param7=.4]" runEq """[{
@@ -198,6 +222,10 @@ class StoryScriptTest {
                 }
             }]"""
         )
+    }
+
+    @Test
+    fun test7() {
         println("parse parameter value of boolean")
         assertTrue(
             "[name param=true param2=false]" runEq """[{
@@ -210,6 +238,10 @@ class StoryScriptTest {
                 }
             }]"""
         )
+    }
+
+    @Test
+    fun test8() {
         println("parse parameter value of null")
         assertTrue(
             "[name param=null param2=false]" runEq """[{
@@ -222,6 +254,10 @@ class StoryScriptTest {
                 }
             }]"""
         )
+    }
+
+    @Test
+    fun test9() {
         println("parse parameter value of array")
         assertTrue(
             "[name param1=[1,2,null,4] param2=[1,false,\"test\",[1,2,null]]]" runEq """[{
@@ -234,6 +270,10 @@ class StoryScriptTest {
                 }
             }]"""
         )
+    }
+
+    @Test
+    fun test10() {
         println("parse multi lines")
         assertTrue(
             """
@@ -258,6 +298,10 @@ class StoryScriptTest {
 //            });
     @Test
     fun testLogicScript() {
+    }
+
+    @Test
+    fun test11() {
         println("parse IF-ELSEIF-ELSE")
         assertTrue(
             """
@@ -288,6 +332,10 @@ class StoryScriptTest {
                 { type: 'content', command: 'name', flags: ['flagC'], params: {} }
             ]"""
         )
+    }
+
+    @Test
+    fun test12() {
         println("parse WHILE")
         assertTrue(
             """
@@ -313,6 +361,10 @@ class StoryScriptTest {
                 { type: 'content', command: 'name', flags: ['flagC'], params: {} }
             ]"""
         )
+    }
+
+    @Test
+    fun test13() {
         println("parse FOREACH")
         assertTrue(
             """
@@ -332,6 +384,10 @@ class StoryScriptTest {
                 { type: 'content', command: 'name', flags: ['flagC'], params: {} }
             ]"""
         )
+    }
+
+    @Test
+    fun test14() {
         println("parse LET")
         assertTrue(
             """
@@ -371,6 +427,10 @@ class StoryScriptTest {
             ]"""
         )
 
+    }
+
+    @Test
+    fun test15() {
         println("parse computation")
         assertTrue(
             """#let x = 1 - 22.3 + 4""" runEq """[{
@@ -408,6 +468,10 @@ class StoryScriptTest {
                 }
             }]"""
         )
+    }
+
+    @Test
+    fun test16() {
         println("parse computation")
         assertTrue(
             """#let x = 1 + 2 * 3 + 4 % 2""" runEq """[
@@ -452,6 +516,10 @@ class StoryScriptTest {
                 }
             ]"""
         )
+    }
+
+    @Test
+    fun test17() {
         println("parse complex logic expression")
         assertTrue(
             """
