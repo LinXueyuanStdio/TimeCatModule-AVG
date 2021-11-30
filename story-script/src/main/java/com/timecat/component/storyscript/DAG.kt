@@ -113,17 +113,17 @@ open class TaskManager<T>(
         }
 
         // 无依赖的同步任务，在主线程顺序执行
-        if (Looper.getMainLooper() === Looper.myLooper()) {
-            println("is main")
-            for (task in syncTasks) {
-                execute(task, event)
-            }
-//            syncTasks.asFlow().onEach(this::execute)
-        } else {
-            syncTasks.asFlow().flowOn(Dispatchers.Main).onEach {
-                this.execute(it, event)
-            }.launchIn(scope())
+        for (task in syncTasks) {
+            execute(task, event)
         }
+//        if (Looper.getMainLooper() === Looper.myLooper()) {
+//            println("is main")
+//            syncTasks.asFlow().onEach(this::execute)
+//        } else {
+//            syncTasks.asFlow().flowOn(Dispatchers.Main).onEach {
+//                this.execute(it, event)
+//            }.launchIn(scope())
+//        }
     }
 
     private fun checkDependence(path: List<String>, depends: Set<String>, map: Map<String, Task<T>>) {
@@ -181,5 +181,5 @@ open class TaskManager<T>(
 
 internal fun log(message: String) {
     println(message)
-    LogUtil.d(message)
+    LogUtil.sd(message)
 }

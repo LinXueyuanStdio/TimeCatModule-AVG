@@ -4,11 +4,13 @@ import android.app.Application
 import androidx.activity.ComponentActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
+import com.timecat.component.commonsdk.utils.override.LogUtil
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collect
 import java.util.logging.Level
 import kotlin.collections.set
+import kotlin.system.measureTimeMillis
 
 /**
  * @author 林学渊
@@ -306,9 +308,9 @@ class EventBusCore : ViewModel() {
         EventBusInitializer.logger?.log(Level.WARNING, "observe Event:$eventName")
         lifecycleOwner.launchWhenStateAtLeast(minState) {
             getSyncFlow(eventName).add(observerName, background, priority, depends) {
-                withContext(dispatcher) {
+//                withContext(dispatcher) {
                     invokeReceived(it, block)
-                }
+//                }
             }
         }
     }
@@ -353,7 +355,10 @@ class EventBusCore : ViewModel() {
     suspend fun postSyncEvent(eventName: String, value: Any, timeMillis: Long) {
         EventBusInitializer.logger?.log(Level.WARNING, "post Event:$eventName")
         delay(timeMillis)
-        getSyncFlow(eventName).start(value)
+        val time = measureTimeMillis {
+            getSyncFlow(eventName).start(value)
+        }
+        LogUtil.se("${time}")
     }
 
 

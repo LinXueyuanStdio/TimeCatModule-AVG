@@ -10,6 +10,7 @@ import com.timecat.component.storyscript.observeSyncEvent
 import com.timecat.layout.ui.business.form.Body
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 /**
  * @author 林学渊
@@ -31,7 +32,9 @@ class Show(
         ) {
             LogUtil.se("ScriptEvent.Exec")
             delay(1000)
-            container.Body("command = ${it.command}\nflags = ${it.flags}\nparams = ${it.params}")
+            withContext(Dispatchers.Main) {
+                container.Body("command = ${it.command}\nflags = ${it.flags}\nparams = ${it.params}")
+            }
         }
     }
 }

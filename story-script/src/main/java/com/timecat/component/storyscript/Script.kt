@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlin.system.measureTimeMillis
 
 /**
  * @author 林学渊
@@ -308,13 +309,16 @@ class Script(
             }
 
             this.waiting = true
-            core.postSyncEvent(
-                ScriptEvent.Exec(
-                    context.command,
-                    context.flags,
-                    context.params,
+            val time = measureTimeMillis {
+                core.postSyncEvent(
+                    ScriptEvent.Exec(
+                        context.command,
+                        context.flags,
+                        context.params,
+                    )
                 )
-            )
+            }
+            LogUtil.se("${time}")
 //            coroutineScope {
 //                val task = async {
 //                    true
