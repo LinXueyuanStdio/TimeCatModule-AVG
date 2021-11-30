@@ -25,7 +25,7 @@ class StoryPlayer(
 
     fun add() {
         val no = floatArrayOf(-1f, -1f, -1f)
-        storyView?.playAdd(BalloonParticleContants.BALLOON_PATHTYPE_EXTEND, "particle/balloon/1.png", 1000, no, true)
+        storyView?.playAdd(BalloonParticleContants.BALLOON_PATHTYPE_EXTEND, "1.png", 1000, no, true)
     }
 
     fun bindView(storyView: StoryView) {
