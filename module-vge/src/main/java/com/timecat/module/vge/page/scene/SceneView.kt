@@ -99,7 +99,7 @@ class SceneView : ConstraintLayout, ICoreView {
                 "text" -> {
                     if ("show" in flags) {
                         if ("bg" in params) {
-                            val filename = params["bg"] as? String
+                            val filename = params["bg"] as? String ?: ""
                             val bg = context.getBitmapDrawable(core.getAssetsPath() + filename)
                             bg?.let {
                                 withContext(Dispatchers.Main) {

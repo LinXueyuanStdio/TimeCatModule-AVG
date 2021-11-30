@@ -24,7 +24,7 @@ class Scene(
     override fun init() {
         core.observeSyncEvent<ScriptEvent.Exec>(
             Dispatchers.Main,
-            observerName = "story",
+            observerName = "Scene",
             background = false
         ) {
             LogUtil.se("ScriptEvent.Exec")

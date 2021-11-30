@@ -64,7 +64,9 @@ class TextWindow : AppCompatTextView, ICoreView {
                 "*" -> {
                     if ("raw" in params) {
                         val raw = params["raw"] as? String ?: ""
-                        msg = raw
+                        withContext(Dispatchers.Main) {
+                            msg = raw
+                        }
                     }
                 }
                 "p" -> {
