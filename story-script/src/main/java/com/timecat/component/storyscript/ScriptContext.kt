@@ -36,7 +36,7 @@ fun JSONArray.toListString(): MutableList<String> {
     return list
 }
 
-class Return(var done: Boolean, var value: ScriptContext) {
+data class Return(var done: Boolean, var value: ScriptContext) {
     companion object {
         fun fromMap(map: Map<String, Any?>): Return {
             val obj = JSONObject(map)
