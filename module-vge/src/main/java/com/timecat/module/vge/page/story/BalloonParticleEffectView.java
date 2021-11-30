@@ -264,7 +264,7 @@ public class BalloonParticleEffectView implements ApplicationListener {
 
 	}
 
-	public void Add(String extentPath, int duration, boolean isLand, float[] rgb, boolean isSelf) {
+	public void add(String extentPath, int duration, boolean isLand, float[] rgb, boolean isSelf) {
 
 		if (openDEBUGLog)
 			Log.d(TAG, "Add");
@@ -288,7 +288,7 @@ public class BalloonParticleEffectView implements ApplicationListener {
 		mPutRenderInfos.add(info);
 	}
 
-	private void AddParticle(String extentPath, int duration, float R, float G, float B, boolean isSelf) {
+	private void addParticle(String extentPath, int duration, float R, float G, float B, boolean isSelf) {
 
 		if (openDEBUGLog)
 			Log.d(TAG, "AddParticle");
@@ -421,7 +421,7 @@ public class BalloonParticleEffectView implements ApplicationListener {
 		for (int i = 0; i < size; i++) {
 			PutRenderInfo info = mPutRenderInfos.get(i);
 
-			AddParticle(info.extentPath, info.duration, info.R, info.G, info.B, info.isSelf);
+			addParticle(info.extentPath, info.duration, info.R, info.G, info.B, info.isSelf);
 			mPutRenderInfos.remove(i);
 			i--;
 			size = mPutRenderInfos.size();

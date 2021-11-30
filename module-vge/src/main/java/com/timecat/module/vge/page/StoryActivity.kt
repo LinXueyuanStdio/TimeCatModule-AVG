@@ -116,6 +116,7 @@ class StoryActivity : BaseSettingActivity() {
         danmakuView = DanmakuView(this)
         container.addView(danmakuView)
         storyView = StoryView(this)
+        storyView.init(this)
         container.addView(storyView)
 
         danmakuPlayer = DanmakuPlayer(renderer).also {
