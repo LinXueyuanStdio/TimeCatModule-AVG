@@ -40,7 +40,6 @@ class StoryView : View, InputProcessor {
     )
 
     var openDEBUGLog = false
-    private val TAG = "LIBGDX-BalloonParticleFragment"
     private lateinit var m_viewRooter: View
 
     //粒子效果UI容器层
@@ -120,7 +119,6 @@ class StoryView : View, InputProcessor {
         if (openDEBUGLog) {
             LogUtil.se("onViewCreated")
         }
-        super.onViewCreated(view, savedInstanceState)
         buildGDX()
     }
 
@@ -143,7 +141,6 @@ class StoryView : View, InputProcessor {
             LogUtil.se("onStart")
         }
         m_isStoping = false
-        super.onStart()
         if (particleEffectView != null) {
             particleEffectView!!.setCanDraw(true)
         }
@@ -155,14 +152,12 @@ class StoryView : View, InputProcessor {
         }
         m_isStoping = true
         particleEffectView!!.setCanDraw(false)
-        super.onStop()
     }
 
     fun onResume() {
         if (openDEBUGLog) {
             LogUtil.se("onResume")
         }
-        super.onResume()
         if (particleEffectView != null) {
             particleEffectView!!.closeforceOver()
         }
@@ -175,7 +170,6 @@ class StoryView : View, InputProcessor {
         if (particleEffectView != null) {
             particleEffectView!!.forceOver()
         }
-        super.onPause()
     }
 
     override fun onConfigurationChanged(config: Configuration?) {
@@ -216,9 +210,7 @@ class StoryView : View, InputProcessor {
         if (i == Input.Keys.BACK) {
             val intent = Intent()
             intent.action = GiftParticleContants.BROADCAST_GIFTPARTICLE_BACKKEY
-            if (getActivity() != null) {
-                getActivity().sendBroadcast(intent)
-            }
+            context?.sendBroadcast(intent)
             return true
         }
         return false
@@ -254,8 +246,8 @@ class StoryView : View, InputProcessor {
 
     private fun isScreenLock(): Boolean {
         return try {
-            val pm = getActivity().getSystemService(Context.POWER_SERVICE) as PowerManager
-            val isScreenOn = pm.isScreenOn //如果为true，则表示屏幕“亮”了，否则屏幕“暗”了。
+            val pm = context?.getSystemService(Context.POWER_SERVICE) as? PowerManager
+            val isScreenOn = pm?.isScreenOn ?: true //如果为true，则表示屏幕“亮”了，否则屏幕“暗”了。
             !isScreenOn
         } catch (e: Exception) {
             e.printStackTrace()
