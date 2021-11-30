@@ -115,12 +115,12 @@ class StoryActivity : BaseSettingActivity() {
     override fun addSettingItems(container: ViewGroup) {
         danmakuView = DanmakuView(this).apply {
             layout_width = match_parent
-            layout_height = 80.dp
+            layout_height = 40.dp
         }
         container.addView(danmakuView)
         storyView = StoryView(this).apply {
             layout_width = match_parent
-            layout_height = 80.dp
+            layout_height = 40.dp
         }
         storyView.init(this)
         container.addView(storyView)

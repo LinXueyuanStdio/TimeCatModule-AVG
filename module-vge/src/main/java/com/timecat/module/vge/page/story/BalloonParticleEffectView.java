@@ -100,12 +100,12 @@ public class BalloonParticleEffectView implements ApplicationListener {
 
     public void forceOver() {
 
-		if (openDEBUGLog) { Log.d(TAG, "forceOver"); }
+        if (openDEBUGLog) { Log.d(TAG, "forceOver"); }
 
         forceOver = true;
 
         for (ParticleInfo info : mParticles) {
-			if (info.particle != null) { info.particle.dispose(); }
+            if (info.particle != null) { info.particle.dispose(); }
         }
 
         //		缓冲50ms，解决退出时绘制闪动的问题
@@ -115,12 +115,12 @@ public class BalloonParticleEffectView implements ApplicationListener {
             e.printStackTrace();
         }
 
-		if (mParticleEffectPool != null) { mParticleEffectPool.clear(); }
+        if (mParticleEffectPool != null) { mParticleEffectPool.clear(); }
     }
 
     public void closeforceOver() {
 
-		if (openDEBUGLog) { Log.d(TAG, "closeforceOver"); }
+        if (openDEBUGLog) { Log.d(TAG, "closeforceOver"); }
 
         forceOver = false;
 
@@ -139,7 +139,7 @@ public class BalloonParticleEffectView implements ApplicationListener {
     @Override
     public void create() {
 
-		if (openDEBUGLog) { Log.d(TAG, "create"); }
+        if (openDEBUGLog) { Log.d(TAG, "create"); }
 
         mBatch = new SpriteBatch();
 
@@ -157,7 +157,7 @@ public class BalloonParticleEffectView implements ApplicationListener {
 
     public void setCanDraw(boolean candraw) {
 
-		if (openDEBUGLog) { Log.d(TAG, "setCanDraw:" + candraw); }
+        if (openDEBUGLog) { Log.d(TAG, "setCanDraw:" + candraw); }
 
         m_candraw = candraw;
 
@@ -183,7 +183,7 @@ public class BalloonParticleEffectView implements ApplicationListener {
         Gdx.gl.glClearColor(0, 0, 0, 0);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-		if (forceOver) { return; }
+        if (forceOver) { return; }
 
         if (!m_candraw) {
             for (int i = 0; i < mParticles.size(); i++) {
@@ -239,23 +239,23 @@ public class BalloonParticleEffectView implements ApplicationListener {
     @Override
     public void dispose() {
 
-		if (openDEBUGLog) { Log.d(TAG, "dispose"); }
+        if (openDEBUGLog) { Log.d(TAG, "dispose"); }
 
         mBatch.dispose();
         //遍历释放所有particle的资源
 
 
         for (ParticleInfo info : mParticles) {
-			if (info.particle != null) { info.particle.dispose(); }
+            if (info.particle != null) { info.particle.dispose(); }
         }
 
-		if (mParticleEffectPool != null) { mParticleEffectPool.clear(); }
+        if (mParticleEffectPool != null) { mParticleEffectPool.clear(); }
 
     }
 
     public void add(String extentPath, int duration, boolean isLand, float[] rgb, boolean isSelf) {
 
-		if (openDEBUGLog) { Log.d(TAG, "Add"); }
+        if (openDEBUGLog) { Log.d(TAG, "Add"); }
 
         if (extentPath == null ||
                 extentPath.equals("") ||
@@ -278,7 +278,7 @@ public class BalloonParticleEffectView implements ApplicationListener {
 
     private void addParticle(String extentPath, int duration, float R, float G, float B, boolean isSelf) {
 
-		if (openDEBUGLog) { Log.d(TAG, "AddParticle"); }
+        if (openDEBUGLog) { Log.d(TAG, "AddParticle"); }
 
         ParticleInfo particleInfo = new ParticleInfo();
 
@@ -302,9 +302,11 @@ public class BalloonParticleEffectView implements ApplicationListener {
         float move_highMin = ScreenUtil.dip2px(BaseApplication.getContext(), randomHighMin);
         float move_highMax = ScreenUtil.dip2px(BaseApplication.getContext(), randomHighMax);
 
-		if (Gdx.files.internal(extentPath).exists()) { mParticle.loadEmitterImages(Gdx.files.internal(extentPath)); } else {
-			Log.e(TAG, "filePath is not exists:" + extentPath);
-		}
+        if (Gdx.files.internal(extentPath).exists()) {
+            mParticle.loadEmitterImages(Gdx.files.internal(extentPath));
+        } else {
+            Log.e(TAG, "filePath is not exists:" + extentPath);
+        }
 
         try {
             mParticle.getEmitters().get(0).getXScale().setLow(scale_lowMin, scale_lowMax);
@@ -323,7 +325,7 @@ public class BalloonParticleEffectView implements ApplicationListener {
         }
 
 
-		if (mParticleEffectPool == null) { mParticleEffectPool = new ParticleEffectPool(mParticle, 3, 3); }
+        if (mParticleEffectPool == null) { mParticleEffectPool = new ParticleEffectPool(mParticle, 3, 3); }
 
         ParticleEffect particleTmp = mParticleEffectPool.obtain();
 
@@ -346,11 +348,11 @@ public class BalloonParticleEffectView implements ApplicationListener {
 
         int randomSoundIndex = (int) ((float) Math.random() * 10);
         randomSoundIndex = randomSoundIndex > 6 ? 1 : 0;
-		if (m_soundOpen) { m_listWaterPopSounds.get(randomSoundIndex).play(); }
+        if (m_soundOpen) { m_listWaterPopSounds.get(randomSoundIndex).play(); }
 
         particleTmp.setDuration(duration);
 
-		if (R >= 0 && G >= 0 && B >= 0) { setColor(particleTmp, R, G, B); }
+        if (R >= 0 && G >= 0 && B >= 0) { setColor(particleTmp, R, G, B); }
 
         particleInfo.particle = particleTmp;
 
@@ -359,7 +361,7 @@ public class BalloonParticleEffectView implements ApplicationListener {
 
     void setColor(ParticleEffect pf, float R, float G, float B) {
 
-		if (openDEBUGLog) { Log.d(TAG, "setColor"); }
+        if (openDEBUGLog) { Log.d(TAG, "setColor"); }
 
         Array<ParticleEmitter> emitters = pf.getEmitters();
         int i = 0;
@@ -413,7 +415,7 @@ public class BalloonParticleEffectView implements ApplicationListener {
 
         String particleFileName = "particle/heartballoon.p";
         if (Gdx.files.internal(particleFileName).exists()) {
-            mParticle.load(Gdx.files.internal(particleFileName), Gdx.files.internal("particle/balloon/1.png"));
+            mParticle.load(Gdx.files.internal(particleFileName), Gdx.files.internal("particle/balloon"));
         }
     }
 
