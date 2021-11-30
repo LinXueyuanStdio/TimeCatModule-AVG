@@ -19,7 +19,7 @@ class StoryPlayer(
             "bg" -> {
 
             }
-            else -> {}
+            else -> {add()}
         }
     }
 

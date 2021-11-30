@@ -36,14 +36,14 @@ class Show(
             LogUtil.se("ScriptEvent.Exec")
             withContext(Dispatchers.Main) {
                 container.Body("command = ${it.command}\nflags = ${it.flags}\nparams = ${it.params}")
-                suspendCoroutine<Boolean> { actor ->
-                    context.showDialog {
-                        title(text = "${it.command}")
-                        onDismiss {
-                            actor.resume(true)
-                        }
-                    }
-                }
+//                suspendCoroutine<Boolean> { actor ->
+//                    context.showDialog {
+//                        title(text = "${it.command}")
+//                        onDismiss {
+//                            actor.resume(true)
+//                        }
+//                    }
+//                }
             }
         }
     }

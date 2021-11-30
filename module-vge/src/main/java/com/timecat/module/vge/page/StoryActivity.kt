@@ -113,9 +113,15 @@ class StoryActivity : BaseSettingActivity() {
     private fun createLayoutFilters(): List<DanmakuLayoutFilter> = emptyList()
 
     override fun addSettingItems(container: ViewGroup) {
-        danmakuView = DanmakuView(this)
+        danmakuView = DanmakuView(this).apply {
+            layout_width = match_parent
+            layout_height = 80.dp
+        }
         container.addView(danmakuView)
-        storyView = StoryView(this)
+        storyView = StoryView(this).apply {
+            layout_width = match_parent
+            layout_height = 80.dp
+        }
         storyView.init(this)
         container.addView(storyView)
 
