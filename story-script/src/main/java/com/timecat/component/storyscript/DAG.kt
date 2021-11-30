@@ -38,12 +38,26 @@ class Task(
     val children: MutableSet<Task> = mutableSetOf()
 }
 
-class TaskList(private val app: Application) {
+open class SimpleTaskList {
+    internal val items: ArrayList<Task> = ArrayList()
+    fun add(task: Task) {
+        items.add(task)
+    }
+
+    fun add(
+        name: String,
+        background: Boolean = false,
+        priority: Int = 0,
+        depends: Set<String> = setOf(),
+        block: suspend () -> Unit = {},
+    ) {
+        items.add(Task(name, background, priority, depends, block))
+    }
+}
+
+class AppTaskList(private val app: Application) : SimpleTaskList() {
     private val isDebuggable = app.isDebuggable()
     private val currentProcessName = app.resolveCurrentProcessName()
-
-    internal val items: ArrayList<Task> = ArrayList()
-
     fun add(moduleName: String, moduleIndex: Int, clazz: Class<out InitTask>, process: String, background: Boolean, debugOnly: Boolean, priority: Short, depends: Set<String>) {
         val name = "$moduleName:${clazz.simpleName}"
         val realPriority = (moduleIndex shl 16) or (priority.toInt() + Short.MAX_VALUE)
@@ -72,12 +86,12 @@ class TaskList(private val app: Application) {
                 }
             }
         }
-        items.add(Task(name, background, priority, depends, block))
+        add(name, background, priority, depends, block)
     }
 }
 
 class TaskManager(
-    private val taskList: TaskList,
+    private val taskList: SimpleTaskList,
     triggers: Set<String> = setOf(),
     val scope: CoroutineScope = GlobalScope,
 ) {
@@ -194,14 +208,14 @@ object InitManager {
     fun init(app: Application, modules: Array<String>) {
 
         val trigger = ":compliance"
-        val taskList = TaskList(app)
+        val taskList = AppTaskList(app)
         val manager = TaskManager(taskList, setOf(trigger))
 
         modules.map { it.replace("[^0-9a-zA-Z_]+".toRegex(), "") }.forEachIndexed { index, it ->
             try {
                 val loaderClass = Class.forName("$PKG.generated.InitLoader_$it")
                 val loader = loaderClass.newInstance()
-                loaderClass.getMethod("load", TaskList::class.java, Int::class.java).invoke(loader, taskList, index)
+                loaderClass.getMethod("load", AppTaskList::class.java, Int::class.java).invoke(loader, taskList, index)
             } catch (e: ClassNotFoundException) {
                 log("There is no Loader in module: $it.")
             } catch (e: Throwable) {
