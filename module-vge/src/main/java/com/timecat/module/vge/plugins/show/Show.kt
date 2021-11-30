@@ -8,6 +8,7 @@ import com.timecat.component.storyscript.ScriptEvent
 import com.timecat.component.storyscript.observeEvent
 import com.timecat.layout.ui.business.form.Body
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 
 /**
  * @author 林学渊
@@ -24,7 +25,8 @@ class Show(
 
     fun initShow() {
         core.observeEvent<ScriptEvent.Exec>(Dispatchers.Main) {
-            LogUtil.e("Show", "ScriptEvent.Exec")
+            LogUtil.se("Show", "ScriptEvent.Exec")
+            delay(1000)
             container.Body("command = ${it.command}\nflags = ${it.flags}\nparams = ${it.params}")
         }
     }

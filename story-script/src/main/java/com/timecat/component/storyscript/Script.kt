@@ -304,13 +304,19 @@ class Script(
             }
 
             this.waiting = true
-            core.postEvent(
+            core.postSyncEvent(
                 ScriptEvent.Exec(
                     context.command,
                     context.flags,
                     context.params,
                 )
             )
+//            coroutineScope {
+//                val task = async {
+//                    true
+//                }
+//                task.await()
+//            }
             this.waiting = false
 
             if (context.isBreak && this.isAuto) {

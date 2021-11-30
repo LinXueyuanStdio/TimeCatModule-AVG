@@ -86,6 +86,14 @@ inline fun <reified T> postEvent(scope: ViewModelStoreOwner, event: T, timeMilli
 
 inline fun <reified T> IEventCore.postEvent(event: T, timeMillis: Long = 0L) = postEvent(this, event, timeMillis)
 
+//限定范围的事件
+suspend inline fun <reified T> postSyncEvent(scope: ViewModelStoreOwner, event: T, timeMillis: Long = 0L) {
+    ViewModelProvider(scope)[EventBusCore::class.java]
+        .postSyncEvent(T::class.java.name, event!!, timeMillis)
+}
+
+suspend inline fun <reified T> IEventCore.postSyncEvent(event: T, timeMillis: Long = 0L) = postSyncEvent(this, event, timeMillis)
+
 //_______________________________________
 //          observe event
 //_______________________________________
@@ -266,6 +274,18 @@ class EventBusCore : ViewModel() {
                 delay(timeMillis)
                 flow.emit(value)
             }
+        }
+    }
+
+    //TODO sync post event
+    suspend fun postSyncEvent(eventName: String, value: Any, timeMillis: Long) {
+        EventBusInitializer.logger?.log(Level.WARNING, "post Event:$eventName")
+        delay(timeMillis)
+        listOfNotNull(
+            getEventFlow(eventName, false),
+            getEventFlow(eventName, true)
+        ).forEach { flow ->
+            flow.emit(value)
         }
     }
 

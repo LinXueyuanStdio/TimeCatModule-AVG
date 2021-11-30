@@ -24,7 +24,7 @@ fun JSONObject.getStringList(key: String): MutableList<String> {
 
 fun JSONObject.getParamsMap(key: String): MutableMap<String, Any?> {
     val value = getJSONObject(key)
-    LogUtil.e(value)
+    LogUtil.se(value)
     return value?.innerMap ?: mutableMapOf()
 }
 
