@@ -26,420 +26,401 @@ import java.util.List;
 @SuppressWarnings("All")
 public class BalloonParticleEffectView implements ApplicationListener {
 
-	public static boolean openDEBUGLog = false;
-	private static final String TAG = "LIBGDX-BalloonParticleEffectView";
+    public static boolean openDEBUGLog = false;
+    private static final String TAG = "LIBGDX-BalloonParticleEffectView";
 
-	//基础绘制资源
-	SpriteBatch mBatch;
+    //基础绘制资源
+    SpriteBatch mBatch;
 
-	//	Asset资源加载管理
-	AssetManager mAssetManager = new AssetManager();
+    //	Asset资源加载管理
+    AssetManager mAssetManager = new AssetManager();
 
-	private ParticleEffectPool mParticleEffectPool = null;
+    private ParticleEffectPool mParticleEffectPool = null;
 
-	ParticleEffect mParticle;
+    ParticleEffect mParticle;
 
-	int mWidth = 0;
+    int mWidth = 0;
 
-	private boolean forceOver = false;
+    private boolean forceOver = false;
 
-	private boolean mIsLand = false;
+    private boolean mIsLand = false;
 
-	private boolean m_candraw = true;
+    private boolean m_candraw = true;
 
-	private boolean m_soundOpen = false;
+    private boolean m_soundOpen = false;
 
-//	Object mLockRenderOpt = new Object();
+    //	Object mLockRenderOpt = new Object();
 
-	private List<Sound> m_listWaterPopSounds = new ArrayList<>();
+    private List<Sound> m_listWaterPopSounds = new ArrayList<>();
 
 
+    class ParticleInfo {
+        public ParticleEffect particle = null;
+        public int playstate = 0;
+        public int duration = 1000;
+        public float stateTime = 0;
+        public Array<TextureRegion> beginAnimTexList = new Array<TextureRegion>();
+        public Array<TextureRegion> endAnimTexList = new Array<TextureRegion>();
+        public Animation beginAnimation = null;
+        public Animation endAnimation = null;
+        public boolean isSelf = false;
+    }
 
-	class ParticleInfo {
-		public ParticleEffect particle = null;
-		public int playstate = 0;
-		public int duration = 1000;
-		public float stateTime = 0;
-		public Array<TextureRegion> beginAnimTexList = new Array<TextureRegion>();
-		public Array<TextureRegion> endAnimTexList = new Array<TextureRegion>();
-		public Animation beginAnimation = null;
-		public Animation endAnimation = null;
-		public boolean isSelf = false;
-	}
+    List<ParticleInfo> mParticles = new ArrayList<ParticleInfo>();
 
-	List<ParticleInfo> mParticles = new ArrayList<ParticleInfo>();
+    private boolean isSelfCheckFromParticle(ParticleEffect particle) {
+        for (int i = 0; i < mParticles.size(); i++) {
+            ParticleInfo info = mParticles.get(i);
+            if (info.particle == particle) {
+                return info.isSelf;
+            }
+        }
+        return false;
+    }
 
-	private boolean isSelfCheckFromParticle(ParticleEffect particle){
-		for (int i=0 ;i<mParticles.size(); i++){
-			ParticleInfo info = mParticles.get(i);
-			if (info.particle == particle){
-				return info.isSelf;
-			}
-		}
-		return false;
-	}
+    private class PutRenderInfo {
+        public String extentPath;
+        public int duration;
+        public float R;
+        public float G;
+        public float B;
+        public boolean isSelf;
+    }
 
-	private class PutRenderInfo {
-		public String extentPath;
-		public int duration;
-		public float R;
-		public float G;
-		public float B;
-		public boolean isSelf;
-	}
+    List<PutRenderInfo> mPutRenderInfos = new ArrayList<PutRenderInfo>();
 
-	List<PutRenderInfo> mPutRenderInfos = new ArrayList<PutRenderInfo>();
 
+    public interface OnStateListener {
+        public void OnBegin(boolean isSelf);
 
-	public interface OnStateListener {
-		public void OnBegin(boolean isSelf);
+        public void OnFinish(boolean isSelf);
+    }
 
-		public void OnFinish(boolean isSelf);
-	}
+    private OnStateListener onStateListener;
 
-	private OnStateListener onStateListener;
+    public void forceOver() {
 
-	public void forceOver() {
+		if (openDEBUGLog) { Log.d(TAG, "forceOver"); }
 
-		if (openDEBUGLog)
-			Log.d(TAG, "forceOver");
+        forceOver = true;
 
-		forceOver = true;
+        for (ParticleInfo info : mParticles) {
+			if (info.particle != null) { info.particle.dispose(); }
+        }
 
-		for (ParticleInfo info : mParticles) {
-			if (info.particle != null)
-				info.particle.dispose();
-		}
+        //		缓冲50ms，解决退出时绘制闪动的问题
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-//		缓冲50ms，解决退出时绘制闪动的问题
-		try {
-			Thread.sleep(50);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		if (mParticleEffectPool != null) { mParticleEffectPool.clear(); }
+    }
 
-		if (mParticleEffectPool != null)
-			mParticleEffectPool.clear();
-	}
+    public void closeforceOver() {
 
-	public void closeforceOver() {
+		if (openDEBUGLog) { Log.d(TAG, "closeforceOver"); }
 
-		if (openDEBUGLog)
-			Log.d(TAG, "closeforceOver");
+        forceOver = false;
 
-		forceOver = false;
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
-		try {
-			Thread.sleep(50);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
 
+    public void switchSound(boolean open) {
+        m_soundOpen = open;
+    }
 
-	public void switchSound(boolean open){
-		m_soundOpen = open;
-	}
+    @Override
+    public void create() {
 
-	@Override
-	public void create() {
+		if (openDEBUGLog) { Log.d(TAG, "create"); }
 
-		if (openDEBUGLog)
-			Log.d(TAG, "create");
+        mBatch = new SpriteBatch();
 
-		mBatch = new SpriteBatch();
+        mWidth = Gdx.graphics.getWidth() > Gdx.graphics.getHeight() ? Gdx.graphics.getHeight() : Gdx.graphics.getWidth();
 
-		mWidth = Gdx.graphics.getWidth() > Gdx.graphics.getHeight() ? Gdx.graphics.getHeight() : Gdx.graphics.getWidth();
+        balloonParticleInit();
 
-		balloonParticleInit();
+        soundInit();
+    }
 
-		soundInit();
-	}
+    @Override
+    public void resize(int i, int i2) {
 
-	@Override
-	public void resize(int i, int i2) {
+    }
 
-	}
+    public void setCanDraw(boolean candraw) {
 
-	public void setCanDraw(boolean candraw) {
+		if (openDEBUGLog) { Log.d(TAG, "setCanDraw:" + candraw); }
 
-		if (openDEBUGLog)
-			Log.d(TAG, "setCanDraw:"+candraw);
+        m_candraw = candraw;
 
-		m_candraw = candraw;
+        if (!m_candraw) {
+            for (int i = 0; i < mParticles.size(); i++) {
 
-		if (!m_candraw) {
-			for (int i = 0; i < mParticles.size(); i++) {
+                ParticleInfo particleInfo = mParticles.get(i);
 
-				ParticleInfo particleInfo = mParticles.get(i);
+                mParticles.remove(particleInfo);
+                particleInfo.particle.dispose();
+                i--;
 
-				mParticles.remove(particleInfo);
-				particleInfo.particle.dispose();
-				i--;
+                onStateListener.OnFinish(particleInfo.isSelf);
 
-				onStateListener.OnFinish(particleInfo.isSelf);
+            }
+            return;
+        }
+    }
 
-			}
-			return;
-		}
-	}
+    @Override
+    public void render() {
 
-	@Override
-	public void render() {
+        Gdx.gl.glClearColor(0, 0, 0, 0);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-		Gdx.gl.glClearColor(0, 0, 0, 0);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		if (forceOver) { return; }
 
-		if (forceOver)
-			return;
+        if (!m_candraw) {
+            for (int i = 0; i < mParticles.size(); i++) {
 
-		if (!m_candraw) {
-			for (int i = 0; i < mParticles.size(); i++) {
+                ParticleInfo particleInfo = mParticles.get(i);
 
-				ParticleInfo particleInfo = mParticles.get(i);
+                mParticles.remove(particleInfo);
+                particleInfo.particle.dispose();
+                i--;
 
-				mParticles.remove(particleInfo);
-				particleInfo.particle.dispose();
-				i--;
+                onStateListener.OnFinish(particleInfo.isSelf);
 
-				onStateListener.OnFinish(particleInfo.isSelf);
+            }
+            return;
+        }
 
-			}
-			return;
-		}
+        //		动态加入需要展示的粒子效果
+        dataLogicGet();
 
-//		动态加入需要展示的粒子效果
-		dataLogicGet();
 
+        mBatch.begin();
+        //		粒子效果绘制
+        for (int i = 0; i < mParticles.size(); i++) {
 
-		mBatch.begin();
-//		粒子效果绘制
-		for (int i = 0; i < mParticles.size(); i++) {
+            ParticleInfo particleInfo = mParticles.get(i);
 
-			ParticleInfo particleInfo = mParticles.get(i);
+            boolean bover = false;
 
-			boolean bover = false;
+            bover = renderParticle(particleInfo);
 
-			bover = renderParticle(particleInfo);
+            if (bover == true) {
+                mParticles.remove(particleInfo);
+                particleInfo.particle.dispose();
+                i--;
 
-			if (bover == true) {
-				mParticles.remove(particleInfo);
-				particleInfo.particle.dispose();
-				i--;
+                onStateListener.OnFinish(particleInfo.isSelf);
+            }
+        }
+        mBatch.end();
 
-				onStateListener.OnFinish(particleInfo.isSelf);
-			}
-		}
-		mBatch.end();
+    }
 
-	}
+    @Override
+    public void pause() {
 
-	@Override
-	public void pause() {
+    }
 
-	}
+    @Override
+    public void resume() {
 
-	@Override
-	public void resume() {
+    }
 
-	}
+    @Override
+    public void dispose() {
 
-	@Override
-	public void dispose() {
+		if (openDEBUGLog) { Log.d(TAG, "dispose"); }
 
-		if (openDEBUGLog)
-			Log.d(TAG, "dispose");
+        mBatch.dispose();
+        //遍历释放所有particle的资源
 
-		mBatch.dispose();
-		//遍历释放所有particle的资源
 
+        for (ParticleInfo info : mParticles) {
+			if (info.particle != null) { info.particle.dispose(); }
+        }
 
-		for (ParticleInfo info : mParticles) {
-			if (info.particle != null)
-				info.particle.dispose();
-		}
+		if (mParticleEffectPool != null) { mParticleEffectPool.clear(); }
 
-		if (mParticleEffectPool != null)
-			mParticleEffectPool.clear();
+    }
 
-	}
+    public void add(String extentPath, int duration, boolean isLand, float[] rgb, boolean isSelf) {
 
-	public void add(String extentPath, int duration, boolean isLand, float[] rgb, boolean isSelf) {
+		if (openDEBUGLog) { Log.d(TAG, "Add"); }
 
-		if (openDEBUGLog)
-			Log.d(TAG, "Add");
+        if (extentPath == null ||
+                extentPath.equals("") ||
+                duration <= 0) {
+            Log.e(TAG, "Param invalid");
+            return;
+        }
 
-		if (extentPath == null ||
-				extentPath.equals("") ||
-				duration <= 0) {
-			Log.e(TAG, "Param invalid");
-			return;
-		}
+        mIsLand = isLand;
 
-		mIsLand = isLand;
+        PutRenderInfo info = new PutRenderInfo();
+        info.extentPath = extentPath;
+        info.duration = duration;
+        info.R = rgb[0];
+        info.G = rgb[1];
+        info.B = rgb[2];
+        info.isSelf = isSelf;
+        mPutRenderInfos.add(info);
+    }
 
-		PutRenderInfo info = new PutRenderInfo();
-		info.extentPath = extentPath;
-		info.duration = duration;
-		info.R = rgb[0];
-		info.G = rgb[1];
-		info.B = rgb[2];
-		info.isSelf = isSelf;
-		mPutRenderInfos.add(info);
-	}
+    private void addParticle(String extentPath, int duration, float R, float G, float B, boolean isSelf) {
 
-	private void addParticle(String extentPath, int duration, float R, float G, float B, boolean isSelf) {
+		if (openDEBUGLog) { Log.d(TAG, "AddParticle"); }
 
-		if (openDEBUGLog)
-			Log.d(TAG, "AddParticle");
+        ParticleInfo particleInfo = new ParticleInfo();
 
-		ParticleInfo particleInfo = new ParticleInfo();
+        particleInfo.isSelf = isSelf;
+        //		particleInfo.duration = duration;
 
-		particleInfo.isSelf = isSelf;
-//		particleInfo.duration = duration;
+        String particleFileName = "particle/heartballoon.p";
 
-		String particleFileName = "particle/heartballoon.p";
+        boolean bScarce = (int) (Math.random() * 10.0f) < 2;
+        int randomHighMin = bScarce ? 180 : 80;
+        int randomHighMax = bScarce ? 200 : 145;
+        //创建粒子系统
+        //放大系数
+        float scale_lowMin = ScreenUtil.dip2px(BaseApplication.getContext(), 0);
+        float scale_lowMax = ScreenUtil.dip2px(BaseApplication.getContext(), 0);
+        float scale_highMin = ScreenUtil.dip2px(BaseApplication.getContext(), 26);
+        float scale_highMax = ScreenUtil.dip2px(BaseApplication.getContext(), 28);
+        //移动系数
+        float move_lowMin = ScreenUtil.dip2px(BaseApplication.getContext(), 15);
+        float move_lowMax = ScreenUtil.dip2px(BaseApplication.getContext(), 25);
+        float move_highMin = ScreenUtil.dip2px(BaseApplication.getContext(), randomHighMin);
+        float move_highMax = ScreenUtil.dip2px(BaseApplication.getContext(), randomHighMax);
 
-		boolean bScarce = (int)(Math.random()*10.0f) < 2;
-		int randomHighMin = bScarce ? 180 : 80;
-		int randomHighMax = bScarce ? 200 : 145;
-		//创建粒子系统
-		//放大系数
-		float scale_lowMin = ScreenUtil.dip2px(BaseApplication.getContext(), 0);
-		float scale_lowMax = ScreenUtil.dip2px(BaseApplication.getContext(), 0);
-		float scale_highMin = ScreenUtil.dip2px(BaseApplication.getContext(), 26);
-		float scale_highMax = ScreenUtil.dip2px(BaseApplication.getContext(), 28);
-		//移动系数
-		float move_lowMin = ScreenUtil.dip2px(BaseApplication.getContext(), 15);
-		float move_lowMax = ScreenUtil.dip2px(BaseApplication.getContext(), 25);
-		float move_highMin = ScreenUtil.dip2px(BaseApplication.getContext(), randomHighMin);
-		float move_highMax = ScreenUtil.dip2px(BaseApplication.getContext(), randomHighMax);
-
-		if (Gdx.files.internal(extentPath).exists())
-			mParticle.loadEmitterImages( Gdx.files.internal(extentPath));
-		else
+		if (Gdx.files.internal(extentPath).exists()) { mParticle.loadEmitterImages(Gdx.files.internal(extentPath)); } else {
 			Log.e(TAG, "filePath is not exists:" + extentPath);
-
-		try{
-			mParticle.getEmitters().get(0).getXScale().setLow(scale_lowMin, scale_lowMax);
-			mParticle.getEmitters().get(0).getXScale().setHigh(scale_highMin, scale_highMax);
-			mParticle.getEmitters().get(0).getYScale().setLow(scale_lowMin, scale_lowMax);
-			mParticle.getEmitters().get(0).getYScale().setHigh(scale_highMin, scale_highMax);
-		}
-		catch (Exception e){
-			e.printStackTrace();
 		}
 
-		try {
-			mParticle.getEmitters().get(0).getVelocity().setLow(move_lowMin, move_lowMax);
-			mParticle.getEmitters().get(0).getVelocity().setHigh(move_highMin, move_highMax);
-		}
-		catch (Exception e){
-			e.printStackTrace();
-		}
+        try {
+            mParticle.getEmitters().get(0).getXScale().setLow(scale_lowMin, scale_lowMax);
+            mParticle.getEmitters().get(0).getXScale().setHigh(scale_highMin, scale_highMax);
+            mParticle.getEmitters().get(0).getYScale().setLow(scale_lowMin, scale_lowMax);
+            mParticle.getEmitters().get(0).getYScale().setHigh(scale_highMin, scale_highMax);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            mParticle.getEmitters().get(0).getVelocity().setLow(move_lowMin, move_lowMax);
+            mParticle.getEmitters().get(0).getVelocity().setHigh(move_highMin, move_highMax);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 
-		if (mParticleEffectPool == null)
-			mParticleEffectPool = new ParticleEffectPool(mParticle, 3, 3);
+		if (mParticleEffectPool == null) { mParticleEffectPool = new ParticleEffectPool(mParticle, 3, 3); }
 
-		ParticleEffect particleTmp = mParticleEffectPool.obtain();
-
-
-		int randomX = 0;
-		int randomY = 0;
-
-		if (mIsLand) {
-			randomX = (int) (Math.random() * 20) + (Gdx.graphics.getWidth() / 2);
-			randomY = 100;
-		} else {
-			randomX = Gdx.graphics.getWidth() - 120 - (int) (Math.random() * 20);
-			randomY =  -30;
-		}
-
-		particleTmp.setPosition(randomX, randomY);
+        ParticleEffect particleTmp = mParticleEffectPool.obtain();
 
 
-		onStateListener.OnBegin(particleInfo.isSelf);
+        int randomX = 0;
+        int randomY = 0;
 
-		int randomSoundIndex = (int)((float)Math.random()*10);
-		randomSoundIndex = randomSoundIndex>6?1:0;
-		if (m_soundOpen)
-			m_listWaterPopSounds.get(randomSoundIndex).play();
+        if (mIsLand) {
+            randomX = (int) (Math.random() * 20) + (Gdx.graphics.getWidth() / 2);
+            randomY = 100;
+        } else {
+            randomX = Gdx.graphics.getWidth() - 120 - (int) (Math.random() * 20);
+            randomY = -30;
+        }
 
-		particleTmp.setDuration(duration);
+        particleTmp.setPosition(randomX, randomY);
 
-		if (R>=0 && G>=0 && B>= 0)
-			setColor(particleTmp, R, G, B);
 
-		particleInfo.particle = particleTmp;
+        onStateListener.OnBegin(particleInfo.isSelf);
 
-		mParticles.add(particleInfo);
-	}
+        int randomSoundIndex = (int) ((float) Math.random() * 10);
+        randomSoundIndex = randomSoundIndex > 6 ? 1 : 0;
+		if (m_soundOpen) { m_listWaterPopSounds.get(randomSoundIndex).play(); }
 
-	void setColor(ParticleEffect pf, float R, float G, float B){
+        particleTmp.setDuration(duration);
 
-		if (openDEBUGLog)
-			Log.d(TAG, "setColor");
+		if (R >= 0 && G >= 0 && B >= 0) { setColor(particleTmp, R, G, B); }
 
-		Array<ParticleEmitter> emitters = pf.getEmitters();
-		int i = 0;
+        particleInfo.particle = particleTmp;
 
-		for(int n = emitters.size; i < n; ++i) {
-			float[] color = {R, G, B};
-			((ParticleEmitter)emitters.get(i)).getTint().setColors(color);
-		}
-	}
+        mParticles.add(particleInfo);
+    }
 
-	public void setOnStateListener(OnStateListener onStateListener) {
-		this.onStateListener = onStateListener;
-	}
+    void setColor(ParticleEffect pf, float R, float G, float B) {
 
-	private boolean renderParticle(ParticleInfo particleInfo) {
-		boolean bres = false;
-		if (particleInfo.playstate == 0) {
+		if (openDEBUGLog) { Log.d(TAG, "setColor"); }
 
-			particleInfo.particle.draw(mBatch, Gdx.graphics.getDeltaTime());
+        Array<ParticleEmitter> emitters = pf.getEmitters();
+        int i = 0;
 
-			//清除已经播放完成的粒子系统
-			if (particleInfo.particle.isComplete()) {
+        for (int n = emitters.size; i < n; ++i) {
+            float[] color = {R, G, B};
+            ((ParticleEmitter) emitters.get(i)).getTint().setColors(color);
+        }
+    }
 
-				particleInfo.playstate = 1;
+    public void setOnStateListener(OnStateListener onStateListener) {
+        this.onStateListener = onStateListener;
+    }
 
-			}
+    private boolean renderParticle(ParticleInfo particleInfo) {
+        boolean bres = false;
+        if (particleInfo.playstate == 0) {
 
-		} else if (particleInfo.playstate == 1) {
+            particleInfo.particle.draw(mBatch, Gdx.graphics.getDeltaTime());
 
-			particleInfo.playstate = 2;
-			bres = true;
+            //清除已经播放完成的粒子系统
+            if (particleInfo.particle.isComplete()) {
 
-		}
-		return bres;
-	}
+                particleInfo.playstate = 1;
 
-	private void dataLogicGet() {
-		int size = mPutRenderInfos.size();
-		for (int i = 0; i < size; i++) {
-			PutRenderInfo info = mPutRenderInfos.get(i);
+            }
 
-			addParticle(info.extentPath, info.duration, info.R, info.G, info.B, info.isSelf);
-			mPutRenderInfos.remove(i);
-			i--;
-			size = mPutRenderInfos.size();
-		}
-	}
+        } else if (particleInfo.playstate == 1) {
 
-	private void balloonParticleInit(){
-		mParticle = new ParticleEffect();
+            particleInfo.playstate = 2;
+            bres = true;
 
-		String particleFileName = "particle/heartballoon.p";
-		if ( Gdx.files.internal(particleFileName).exists())
-			mParticle.load(Gdx.files.internal(particleFileName), Gdx.files.internal("particle/balloon/1.png"));
-	}
+        }
+        return bres;
+    }
 
-	private void soundInit(){
-		Sound waterPop1 = Gdx.audio.newSound(Gdx.files.internal("audio/waterpop/waterpop.wav"));
-		Sound waterPop2 = Gdx.audio.newSound(Gdx.files.internal("audio/waterpop/waterpop2.wav"));
-		m_listWaterPopSounds.add(waterPop1);
-		m_listWaterPopSounds.add(waterPop2);
-	}
+    private void dataLogicGet() {
+        int size = mPutRenderInfos.size();
+        for (int i = 0; i < size; i++) {
+            PutRenderInfo info = mPutRenderInfos.get(i);
+
+            addParticle(info.extentPath, info.duration, info.R, info.G, info.B, info.isSelf);
+            mPutRenderInfos.remove(i);
+            i--;
+            size = mPutRenderInfos.size();
+        }
+    }
+
+    private void balloonParticleInit() {
+        mParticle = new ParticleEffect();
+
+        String particleFileName = "particle/heartballoon.p";
+        if (Gdx.files.internal(particleFileName).exists()) {
+            mParticle.load(Gdx.files.internal(particleFileName), Gdx.files.internal("particle/balloon/1.png"));
+        }
+    }
+
+    private void soundInit() {
+        Sound waterPop1 = Gdx.audio.newSound(Gdx.files.internal("audio/waterpop/waterpop.wav"));
+        Sound waterPop2 = Gdx.audio.newSound(Gdx.files.internal("audio/waterpop/waterpop2.wav"));
+        m_listWaterPopSounds.add(waterPop1);
+        m_listWaterPopSounds.add(waterPop2);
+    }
 }
