@@ -57,22 +57,16 @@ class StoryView : GdxView, InputProcessor {
 
     private var m_hasBuilt = false
 
-    fun playAdd(pathtype: Int, pathstring: String?, dur: Int, rgb: FloatArray?, isSelf: Boolean) {
+    fun playAdd(pathtype: Int, path: String?, dur: Int, rgb: FloatArray?, isSelf: Boolean) {
         if (openDEBUGLog) {
             LogUtil.se("PlayAdd")
         }
-        if (m_isStoping || isScreenLock()) {
-            return
-        }
-        if (pathstring == null) {
-            return
-        }
-        if (pathstring == "") {
-            return
-        }
+        if (m_isStoping || isScreenLock()) return
+        if (path == null) return
+        if (path == "") return
         val isLand = this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE
-        particleEffectView!!.add(pathstring, dur, isLand, rgb, isSelf)
-        particleEffectView!!.setOnStateListener(object : BalloonParticleEffectView.OnStateListener {
+        particleEffectView?.add(path, dur, isLand, rgb, isSelf)
+        particleEffectView?.setOnStateListener(object : BalloonParticleEffectView.OnStateListener {
             override fun OnBegin(isself: Boolean) {
                 EventBus.getDefault().post(BalloonParticleEvents.BalloonParticleLifeCircleBegin(isself))
             }

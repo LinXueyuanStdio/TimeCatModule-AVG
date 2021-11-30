@@ -1,6 +1,6 @@
 [bg file='chapters/1/1_bg_pre.png']
 
-[text show]
+[text show bg='textwindow/bg.png']
 I should believe that even the most impossible dreams might come true.[r]
 Henryk Sienkiewicz[r]
 [text set italic=true]

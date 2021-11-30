@@ -115,12 +115,12 @@ class StoryActivity : BaseSettingActivity() {
     override fun addSettingItems(container: ViewGroup) {
         danmakuView = DanmakuView(this).apply {
             layout_width = match_parent
-            layout_height = 96
+            layout_height = 128
         }
         container.addView(danmakuView)
         storyView = StoryView(this).apply {
             layout_width = match_parent
-            layout_height = 96
+            layout_height = 156
         }
         storyView.init(this)
         container.addView(storyView)
@@ -131,7 +131,7 @@ class StoryActivity : BaseSettingActivity() {
         mainHandler.sendEmptyMessageDelayed(MSG_UPDATE_DATA, 2000)
         mainHandler.sendEmptyMessageDelayed(MSG_START, 2500)
 
-        val storyPlayer = StoryPlayer().also {
+        val storyPlayer = StoryPlayer(this, core).also {
             it.bindView(storyView)
         }
         listOf(
@@ -161,10 +161,10 @@ class StoryActivity : BaseSettingActivity() {
         }
         container.HorizontalScrollView {
             layout_width = match_parent
-            layout_height = 24
+            layout_height = 54
             HorizontalContainer {
                 layout_width = 0
-                layout_height = 24
+                layout_height = 54
                 addView(load)
                 addView(skip)
                 addView(auto)

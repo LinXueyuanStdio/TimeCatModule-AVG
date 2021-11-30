@@ -187,15 +187,11 @@ public class BalloonParticleEffectView implements ApplicationListener {
 
         if (!m_candraw) {
             for (int i = 0; i < mParticles.size(); i++) {
-
                 ParticleInfo particleInfo = mParticles.get(i);
-
                 mParticles.remove(particleInfo);
                 particleInfo.particle.dispose();
                 i--;
-
                 onStateListener.OnFinish(particleInfo.isSelf);
-
             }
             return;
         }
@@ -254,16 +250,13 @@ public class BalloonParticleEffectView implements ApplicationListener {
     }
 
     public void add(String extentPath, int duration, boolean isLand, float[] rgb, boolean isSelf) {
-
         if (openDEBUGLog) { Log.d(TAG, "Add"); }
-
         if (extentPath == null ||
                 extentPath.equals("") ||
                 duration <= 0) {
             Log.e(TAG, "Param invalid");
             return;
         }
-
         mIsLand = isLand;
 
         PutRenderInfo info = new PutRenderInfo();
@@ -303,7 +296,7 @@ public class BalloonParticleEffectView implements ApplicationListener {
         float move_highMax = ScreenUtil.dip2px(BaseApplication.getContext(), randomHighMax);
 
         if (Gdx.files.internal(extentPath).exists()) {
-            mParticle.loadEmitterImages(Gdx.files.internal(extentPath));
+            changeSiprit(extentPath);
         } else {
             Log.e(TAG, "filePath is not exists:" + extentPath);
         }
@@ -360,12 +353,9 @@ public class BalloonParticleEffectView implements ApplicationListener {
     }
 
     void setColor(ParticleEffect pf, float R, float G, float B) {
-
         if (openDEBUGLog) { Log.d(TAG, "setColor"); }
-
         Array<ParticleEmitter> emitters = pf.getEmitters();
         int i = 0;
-
         for (int n = emitters.size; i < n; ++i) {
             float[] color = {R, G, B};
             ((ParticleEmitter) emitters.get(i)).getTint().setColors(color);
@@ -379,21 +369,15 @@ public class BalloonParticleEffectView implements ApplicationListener {
     private boolean renderParticle(ParticleInfo particleInfo) {
         boolean bres = false;
         if (particleInfo.playstate == 0) {
-
             particleInfo.particle.draw(mBatch, Gdx.graphics.getDeltaTime());
 
             //清除已经播放完成的粒子系统
             if (particleInfo.particle.isComplete()) {
-
                 particleInfo.playstate = 1;
-
             }
-
         } else if (particleInfo.playstate == 1) {
-
             particleInfo.playstate = 2;
             bres = true;
-
         }
         return bres;
     }
@@ -408,6 +392,11 @@ public class BalloonParticleEffectView implements ApplicationListener {
             i--;
             size = mPutRenderInfos.size();
         }
+    }
+
+    private void changeSiprit(String path) {
+        mParticle.getEmitters().get(0).setImagePaths(new Array<>(new String[]{path}));
+        mParticle.loadEmitterImages(Gdx.files.internal("particle/balloon"));
     }
 
     private void balloonParticleInit() {

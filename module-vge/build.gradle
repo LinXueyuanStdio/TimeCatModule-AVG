@@ -4,6 +4,7 @@ android {
     resourcePrefix "vge_" //给 Module 内的资源名增加前缀, 避免资源名冲突
     buildFeatures{
         dataBinding = true
+        compose true
         // viewBinding = true
     }
 }
@@ -19,6 +20,25 @@ dependencies {
     api rootProject.ext.timecat["component-CommonStatic"]
     api rootProject.ext.timecat["middle-setting"]
     api rootProject.ext.timecat["middle-block"]
+
+    def compose_version = '1.0.5'
+
+    // 基础UI框架
+    api "androidx.compose.ui:ui:$compose_version"
+    // Material风格布局
+    api "androidx.compose.material:material:$compose_version"
+    // Compose扩展Activity
+    api 'androidx.activity:activity-compose:1.4.0'
+    // UI测试
+    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
+    // UI工具包
+    debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
+
+    // Material风格图标
+    api("androidx.compose.material:material-icons-core:$compose_version")
+    api("androidx.compose.material:material-icons-extended:$compose_version")
+
+
 
     api "com.badlogicgames.gdx:gdx-backend-android:1.10.0"
 
