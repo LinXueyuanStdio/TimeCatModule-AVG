@@ -28,9 +28,12 @@ import com.timecat.layout.ui.business.form.HorizontalContainer
 import com.timecat.layout.ui.layout.*
 import com.timecat.middle.setting.BaseSettingActivity
 import com.timecat.module.vge.R
+import com.timecat.module.vge.page.scene.ScenePlayer
+import com.timecat.module.vge.page.scene.SceneView
 import com.timecat.module.vge.page.story.StoryPlayer
 import com.timecat.module.vge.page.story.StoryView
 import com.timecat.module.vge.plugins.Danmaku
+import com.timecat.module.vge.plugins.Scene
 import com.timecat.module.vge.plugins.Show
 import com.timecat.module.vge.plugins.Story
 
@@ -83,6 +86,7 @@ class StoryActivity : BaseSettingActivity() {
 
     private lateinit var danmakuView: DanmakuView
     private lateinit var storyView: StoryView
+    private lateinit var sceneView: SceneView
 
     private val mainHandler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
@@ -120,10 +124,16 @@ class StoryActivity : BaseSettingActivity() {
         container.addView(danmakuView)
         storyView = StoryView(this).apply {
             layout_width = match_parent
-            layout_height = 156
+            layout_height = 168
         }
         storyView.init(this)
         container.addView(storyView)
+        sceneView = SceneView(this).apply {
+            layout_width = match_parent
+            layout_height = 168
+        }
+        sceneView.init(this)
+        container.addView(sceneView)
 
         danmakuPlayer = DanmakuPlayer(renderer).also {
             it.bindView(danmakuView)
@@ -134,11 +144,15 @@ class StoryActivity : BaseSettingActivity() {
         val storyPlayer = StoryPlayer(this, core).also {
             it.bindView(storyView)
         }
+        val scenePlayer = ScenePlayer(this, core).also {
+            it.bindView(sceneView)
+        }
         listOf(
             Script(this, core),
             Show(this, core, container),
             Danmaku(this, core, danmakuPlayer),
             Story(this, core, storyPlayer),
+            Scene(this, core, scenePlayer),
         ).forEach { it.init() }
 
         val skip = Chip(this).apply {

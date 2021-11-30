@@ -42,6 +42,22 @@ inline fun <reified T> getEventObserverCount(scope: ViewModelStoreOwner, event: 
 
 
 //移除事件
+inline fun <reified T> removeSyncEvent(event: Class<T>, observerName: String) {
+    ApplicationScopeViewModelProvider.get(EventBusCore::class.java)
+        .removeSyncEvent(event.name, observerName)
+}
+
+inline fun <reified T> removeSyncEvent(scope: ViewModelStoreOwner, event: Class<T>, observerName: String) {
+    ViewModelProvider(scope).get(EventBusCore::class.java)
+        .removeSyncEvent(event.name, observerName)
+}
+
+inline fun <reified T> IEventCore.removeSyncEvent(event: Class<T>, observerName: String) {
+    ViewModelProvider(this).get(EventBusCore::class.java)
+        .removeSyncEvent(event.name, observerName)
+}
+
+//移除事件
 inline fun <reified T> removeStickyEvent(event: Class<T>) {
     ApplicationScopeViewModelProvider.get(EventBusCore::class.java)
         .removeStickEvent(event.name)
@@ -366,6 +382,9 @@ class EventBusCore : ViewModel() {
     }
 
 
+    fun removeSyncEvent(eventName: String, observerName: String) {
+        getSyncFlow(eventName).remove(observerName)
+    }
     fun removeStickEvent(eventName: String) {
         stickyEventFlows.remove(eventName)
     }
