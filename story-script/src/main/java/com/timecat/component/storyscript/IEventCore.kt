@@ -25,6 +25,10 @@ interface IEventCore : ViewModelStoreOwner, LifecycleOwner {
     fun loadAssets(text: String)
 }
 
+interface ICorePlugin {
+    fun init()
+}
+
 
 inline fun <reified T> getEventObserverCount(event: Class<T>): Int {
     return ApplicationScopeViewModelProvider.get(EventBusCore::class.java)
@@ -309,7 +313,7 @@ class EventBusCore : ViewModel() {
         lifecycleOwner.launchWhenStateAtLeast(minState) {
             getSyncFlow(eventName).add(observerName, background, priority, depends) {
 //                withContext(dispatcher) {
-                    invokeReceived(it, block)
+                invokeReceived(it, block)
 //                }
             }
         }

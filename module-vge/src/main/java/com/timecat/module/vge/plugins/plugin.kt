@@ -7,3 +7,4 @@ package com.timecat.module.vge.plugins
  * @description null
  * @usage null
  */
+data class StoryCommand(val command: String, val flags: List<String>, val params: Map<String, Any?>)

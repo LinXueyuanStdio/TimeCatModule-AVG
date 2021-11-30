@@ -1,5 +1,7 @@
 package com.timecat.module.vge.page.story
 
+import com.timecat.module.vge.plugins.StoryCommand
+
 /**
  * @author 林学渊
  * @email linxy59@mail2.sysu.edu.cn
@@ -10,4 +12,17 @@ package com.timecat.module.vge.page.story
 class StoryPlayer(
 
 ) {
+    private var storyView: StoryView? = null
+    suspend fun postSyncCommand(command: StoryCommand) {
+
+    }
+
+    fun bindView(storyView: StoryView) {
+        this.storyView?.storyPlayer = null
+        this.storyView = storyView
+        storyView.storyPlayer = this
+        engine.context.displayer = storyView.displayer
+        notifyDisplayerSizeChanged(storyView.displayer.width, storyView.displayer.height)
+        storyView.postInvalidate()
+    }
 }

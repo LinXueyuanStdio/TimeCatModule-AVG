@@ -1,6 +1,5 @@
 package com.timecat.module.vge.page
 
-import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
@@ -26,8 +25,11 @@ import com.timecat.component.storyscript.ScriptEvent
 import com.timecat.component.storyscript.postEvent
 import com.timecat.middle.setting.BaseSettingActivity
 import com.timecat.module.vge.R
+import com.timecat.module.vge.page.story.StoryPlayer
+import com.timecat.module.vge.page.story.StoryView
 import com.timecat.module.vge.plugins.Danmaku
-import com.timecat.module.vge.plugins.show.Show
+import com.timecat.module.vge.plugins.Show
+import com.timecat.module.vge.plugins.Story
 
 /**
  * @author 林学渊
@@ -77,6 +79,7 @@ class StoryActivity : BaseSettingActivity() {
     }
 
     private lateinit var danmakuView: DanmakuView
+    private lateinit var storyView: StoryView
 
     private val mainHandler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
@@ -109,6 +112,8 @@ class StoryActivity : BaseSettingActivity() {
     override fun addSettingItems(container: ViewGroup) {
         danmakuView = DanmakuView(this)
         container.addView(danmakuView)
+        storyView = StoryView(this)
+        container.addView(storyView)
 
         danmakuPlayer = DanmakuPlayer(renderer).also {
             it.bindView(danmakuView)
@@ -116,12 +121,15 @@ class StoryActivity : BaseSettingActivity() {
         mainHandler.sendEmptyMessageDelayed(MSG_UPDATE_DATA, 2000)
         mainHandler.sendEmptyMessageDelayed(MSG_START, 2500)
 
-        val story = Script(this, core)
-        story.initStoryScript()
-        val show = Show(this, core, container)
-        show.initShow()
-        val danmaku = Danmaku(this, core, danmakuPlayer)
-        danmaku.initDanmaku()
+        val storyPlayer = StoryPlayer().also {
+            it.bindView(storyView)
+        }
+        listOf(
+            Script(this, core),
+            Show(this, core, container),
+            Danmaku(this, core, danmakuPlayer),
+            Story(this, core, storyPlayer),
+        ).forEach { it.init() }
 
         val storyScript = """
             [bg file='chapters/1/1_bg_pre.png']

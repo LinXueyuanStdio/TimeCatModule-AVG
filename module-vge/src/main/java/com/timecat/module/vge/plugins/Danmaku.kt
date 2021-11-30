@@ -7,6 +7,7 @@ import com.kuaishou.akdanmaku.data.DanmakuItemData
 import com.kuaishou.akdanmaku.ecs.component.action.Actions
 import com.kuaishou.akdanmaku.ui.DanmakuPlayer
 import com.timecat.component.commonsdk.utils.override.LogUtil
+import com.timecat.component.storyscript.ICorePlugin
 import com.timecat.component.storyscript.IEventCore
 import com.timecat.component.storyscript.ScriptEvent
 import com.timecat.component.storyscript.observeSyncEvent
@@ -28,8 +29,8 @@ class Danmaku(
     val context: Context,
     val core: IEventCore,
     val danmakuPlayer: DanmakuPlayer,
-) {
-    fun initDanmaku() {
+) : ICorePlugin {
+    override fun init() {
         core.observeSyncEvent<ScriptEvent.Exec>(
             Dispatchers.Main,
             observerName = "弹幕",

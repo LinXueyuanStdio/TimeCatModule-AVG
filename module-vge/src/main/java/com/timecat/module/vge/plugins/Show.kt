@@ -1,16 +1,16 @@
-package com.timecat.module.vge.plugins.show
+package com.timecat.module.vge.plugins
 
 import android.content.Context
 import android.view.ViewGroup
 import com.afollestad.materialdialogs.callbacks.onDismiss
 import com.timecat.component.commonsdk.utils.override.LogUtil
+import com.timecat.component.storyscript.ICorePlugin
 import com.timecat.component.storyscript.IEventCore
 import com.timecat.component.storyscript.ScriptEvent
 import com.timecat.component.storyscript.observeSyncEvent
 import com.timecat.layout.ui.business.form.Body
 import com.timecat.middle.block.ext.showDialog
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -26,8 +26,8 @@ class Show(
     val context: Context,
     val core: IEventCore,
     val container: ViewGroup,
-) {
-    fun initShow() {
+) : ICorePlugin {
+    override fun init() {
         core.observeSyncEvent<ScriptEvent.Exec>(
             Dispatchers.Main,
             observerName = "show",

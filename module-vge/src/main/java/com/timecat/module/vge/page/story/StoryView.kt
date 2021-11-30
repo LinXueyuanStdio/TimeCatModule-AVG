@@ -39,6 +39,7 @@ class StoryView : View, InputProcessor {
         defStyleAttr
     )
 
+    var storyPlayer: StoryPlayer? = null
     var openDEBUGLog = false
     private lateinit var m_viewRooter: View
 

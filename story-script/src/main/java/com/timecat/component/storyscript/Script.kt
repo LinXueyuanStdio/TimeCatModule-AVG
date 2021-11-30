@@ -19,7 +19,7 @@ import kotlin.system.measureTimeMillis
 class Script(
     val context: Context,
     val core: IEventCore,
-) : IScript {
+) : ICorePlugin, IScript {
     val parser = StoryScript(context, this)
     var macros = mutableMapOf<String, (List<String>, Map<String, Any?>) -> Unit>()
     var macroKeys = mutableListOf<Any>()
@@ -32,7 +32,7 @@ class Script(
     var isAuto = false
     var autoInterval: Long = 1000
 
-    fun initStoryScript() {
+    override fun init() {
         parser.onCreate()
         parser.onStoryScriptCreate()
         core.observeEvent<ScriptEvent.Init>(Dispatchers.IO) {
