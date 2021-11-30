@@ -115,12 +115,12 @@ class StoryActivity : BaseSettingActivity() {
     override fun addSettingItems(container: ViewGroup) {
         danmakuView = DanmakuView(this).apply {
             layout_width = match_parent
-            layout_height = 40.dp
+            layout_height = 96
         }
         container.addView(danmakuView)
         storyView = StoryView(this).apply {
             layout_width = match_parent
-            layout_height = 40.dp
+            layout_height = 96
         }
         storyView.init(this)
         container.addView(storyView)
@@ -161,10 +161,10 @@ class StoryActivity : BaseSettingActivity() {
         }
         container.HorizontalScrollView {
             layout_width = match_parent
-            layout_height = 54.dp
+            layout_height = 24
             HorizontalContainer {
                 layout_width = 0
-                layout_height = 54.dp
+                layout_height = 24
                 addView(load)
                 addView(skip)
                 addView(auto)

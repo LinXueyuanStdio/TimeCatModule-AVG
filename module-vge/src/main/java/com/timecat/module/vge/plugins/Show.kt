@@ -11,6 +11,7 @@ import com.timecat.component.storyscript.observeSyncEvent
 import com.timecat.layout.ui.business.form.Body
 import com.timecat.middle.block.ext.showDialog
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -34,6 +35,7 @@ class Show(
             background = false
         ) {
             LogUtil.se("ScriptEvent.Exec")
+            delay(1000)
             withContext(Dispatchers.Main) {
                 container.Body("command = ${it.command}\nflags = ${it.flags}\nparams = ${it.params}")
 //                suspendCoroutine<Boolean> { actor ->
