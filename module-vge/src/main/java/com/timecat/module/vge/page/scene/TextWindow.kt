@@ -59,7 +59,14 @@ class TextWindow : AppCompatTextView, ICoreView {
         ) {
             LogUtil.se("ScriptEvent.Exec")
             val command = it.command
+            val params = it.params
             when (command) {
+                "*" -> {
+                    if ("raw" in params) {
+                        val raw = params["raw"] as? String ?: ""
+                        msg = raw
+                    }
+                }
                 "p" -> {
                     withContext(Dispatchers.Main) {
                         suspendCoroutine<Boolean> { con ->
