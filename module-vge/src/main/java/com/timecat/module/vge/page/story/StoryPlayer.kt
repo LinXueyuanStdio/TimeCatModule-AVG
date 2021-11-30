@@ -15,17 +15,25 @@ class StoryPlayer(
     private var storyView: StoryView? = null
     suspend fun postSyncCommand(storyCommand: StoryCommand) {
         val (command, flags, params) = storyCommand
-        when(command) {
-            else->{}
+        when (command) {
+            "bg" -> {
+
+            }
+            else -> {}
         }
+    }
+
+    fun add() {
+        val no = floatArrayOf(-1f, -1f, -1f)
+        storyView?.playAdd(BalloonParticleContants.BALLOON_PATHTYPE_EXTEND, "particle/balloon/1.png", 1000, no, true)
     }
 
     fun bindView(storyView: StoryView) {
         this.storyView?.storyPlayer = null
         this.storyView = storyView
         storyView.storyPlayer = this
-        engine.context.displayer = storyView.displayer
-        notifyDisplayerSizeChanged(storyView.displayer.width, storyView.displayer.height)
+//        engine.context.displayer = storyView.displayer
+//        notifyDisplayerSizeChanged(storyView.displayer.width, storyView.displayer.height)
         storyView.postInvalidate()
     }
 }

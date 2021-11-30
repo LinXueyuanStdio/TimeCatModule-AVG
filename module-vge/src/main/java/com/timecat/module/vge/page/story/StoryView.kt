@@ -5,20 +5,20 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.opengl.GLSurfaceView
-import android.os.Bundle
 import android.os.PowerManager
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.view.SurfaceView
 import android.view.View
-import android.view.ViewGroup
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration
+import com.badlogic.gdx.backends.android.GdxView
 import com.timecat.component.commonsdk.utils.override.LogUtil
-import com.timecat.module.vge.R
 import org.greenrobot.eventbus.EventBus
 
 /**
@@ -28,10 +28,10 @@ import org.greenrobot.eventbus.EventBus
  * @description null
  * @usage null
  */
-class StoryView : View, InputProcessor {
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
+class StoryView : GdxView, InputProcessor {
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
         context,
         attrs,
         defStyleAttr
@@ -39,7 +39,6 @@ class StoryView : View, InputProcessor {
 
     var storyPlayer: StoryPlayer? = null
     var openDEBUGLog = false
-    private lateinit var m_viewRooter: View
 
     //粒子效果UI容器层
     private lateinit var mContainer: InterceptableViewGroup
@@ -58,7 +57,7 @@ class StoryView : View, InputProcessor {
 
     private var m_hasBuilt = false
 
-    fun PlayAdd(pathtype: Int, pathstring: String?, dur: Int, rgb: FloatArray?, isSelf: Boolean) {
+    fun playAdd(pathtype: Int, pathstring: String?, dur: Int, rgb: FloatArray?, isSelf: Boolean) {
         if (openDEBUGLog) {
             LogUtil.se("PlayAdd")
         }
@@ -72,7 +71,7 @@ class StoryView : View, InputProcessor {
             return
         }
         val isLand = this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE
-        particleEffectView!!.Add(pathstring, dur, isLand, rgb, isSelf)
+        particleEffectView!!.add(pathstring, dur, isLand, rgb, isSelf)
         particleEffectView!!.setOnStateListener(object : BalloonParticleEffectView.OnStateListener {
             override fun OnBegin(isself: Boolean) {
                 EventBus.getDefault().post(BalloonParticleEvents.BalloonParticleLifeCircleBegin(isself))
@@ -88,12 +87,10 @@ class StoryView : View, InputProcessor {
         if (openDEBUGLog) {
             LogUtil.se("switchSound")
         }
-        if (particleEffectView != null) {
-            particleEffectView!!.switchSound(open)
-        }
+        particleEffectView?.switchSound(open)
     }
 
-    fun preDestory() {
+    fun onDestroy() {
         if (openDEBUGLog) {
             LogUtil.se("preDestory")
         }
@@ -106,19 +103,26 @@ class StoryView : View, InputProcessor {
         m_isStoping = true
     }
 
-    fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        if (openDEBUGLog) {
-            LogUtil.se("onCreateView")
-        }
-        m_viewRooter = inflater.inflate(R.layout.vge_layout_story, null)
-        return m_viewRooter
-    }
-
-    fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    fun init(owner: LifecycleOwner) {
         if (openDEBUGLog) {
             LogUtil.se("onViewCreated")
         }
+        mContainer = InterceptableViewGroup(context)
+        addView(mContainer)
         buildGDX()
+        owner.lifecycle.addObserver(object : LifecycleEventObserver {
+            override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+                when (event) {
+                    Lifecycle.Event.ON_CREATE -> {}
+                    Lifecycle.Event.ON_START -> onStart()
+                    Lifecycle.Event.ON_RESUME -> onResume()
+                    Lifecycle.Event.ON_PAUSE -> onPause()
+                    Lifecycle.Event.ON_STOP -> onStop()
+                    Lifecycle.Event.ON_DESTROY -> onDestroy()
+                    Lifecycle.Event.ON_ANY -> {}
+                }
+            }
+        })
     }
 
     fun buildGDX() {
@@ -126,9 +130,8 @@ class StoryView : View, InputProcessor {
             LogUtil.se("buildGDX")
         }
         particleEffectView = BalloonParticleEffectView()
-        val effectview = createGLAlpha(particleEffectView!!)
-        mContainer = m_viewRooter.findViewById<View>(R.id.container) as InterceptableViewGroup
-        mContainer.addView(effectview)
+        val effectView = createGLAlpha(particleEffectView!!)
+        mContainer.addView(effectView)
         mContainer.setIntercept(true)
         Gdx.input.setInputProcessor(this)
         Gdx.input.isCatchBackKey = true
@@ -153,25 +156,27 @@ class StoryView : View, InputProcessor {
         particleEffectView!!.setCanDraw(false)
     }
 
-    fun onResume() {
+    override fun onResume() {
         if (openDEBUGLog) {
             LogUtil.se("onResume")
         }
+        super.onResume()
         if (particleEffectView != null) {
             particleEffectView!!.closeforceOver()
         }
     }
 
-    fun onPause() {
+    override fun onPause() {
         if (openDEBUGLog) {
             LogUtil.se("onPause")
         }
         if (particleEffectView != null) {
             particleEffectView!!.forceOver()
         }
+        super.onPause()
     }
 
-    override fun onConfigurationChanged(config: Configuration?) {
+    override fun onConfigurationChanged(config: Configuration) {
         if (openDEBUGLog) {
             LogUtil.se("onConfigurationChanged")
         }
@@ -193,7 +198,7 @@ class StoryView : View, InputProcessor {
         cfg.r = cfg.g
         val view: View = initializeForView(application, cfg)
         if (view is SurfaceView) {
-            val glView = graphics.getView() as GLSurfaceView
+            val glView = _graphics.view as GLSurfaceView
             glView.holder.setFormat(PixelFormat.TRANSLUCENT)
             glView.setZOrderMediaOverlay(true)
             glView.setZOrderOnTop(true)
