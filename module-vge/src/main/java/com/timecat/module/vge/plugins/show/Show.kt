@@ -6,6 +6,7 @@ import com.timecat.component.commonsdk.utils.override.LogUtil
 import com.timecat.component.storyscript.IEventCore
 import com.timecat.component.storyscript.ScriptEvent
 import com.timecat.component.storyscript.observeEvent
+import com.timecat.component.storyscript.observeSyncEvent
 import com.timecat.layout.ui.business.form.Body
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -22,10 +23,13 @@ class Show(
     val core: IEventCore,
     val container: ViewGroup,
 ) {
-
     fun initShow() {
-        core.observeEvent<ScriptEvent.Exec>(Dispatchers.Main) {
-            LogUtil.se("Show", "ScriptEvent.Exec")
+        core.observeSyncEvent<ScriptEvent.Exec>(
+            Dispatchers.Main,
+            observerName = "show",
+            background = false
+        ) {
+            LogUtil.se("ScriptEvent.Exec")
             delay(1000)
             container.Body("command = ${it.command}\nflags = ${it.flags}\nparams = ${it.params}")
         }

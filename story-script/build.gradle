@@ -13,6 +13,9 @@ android {
 //            resolutionStrategy { force 'androidx.core:core:1.6.0' }
 //        }
     }
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 //test {
 //    useJUnitPlatform()

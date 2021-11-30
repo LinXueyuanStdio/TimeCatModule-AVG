@@ -49,7 +49,11 @@ class Script(
             LogUtil.se("ScriptEvent.Trigger")
             script_trigger(it.DONOTSTOPAUTOORSKIP, it.next)
         }
-        core.observeEvent<ScriptEvent.Exec>(Dispatchers.IO) {
+        core.observeSyncEvent<ScriptEvent.Exec>(
+            Dispatchers.IO,
+            observerName = "script",
+            background = true
+        ) {
             LogUtil.se("ScriptEvent.Exec")
             script_exec(it.command, it.flags, it.params, it.next)
         }

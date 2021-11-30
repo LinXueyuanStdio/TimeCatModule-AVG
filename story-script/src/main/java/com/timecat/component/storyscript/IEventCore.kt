@@ -19,7 +19,7 @@ import kotlin.collections.set
  */
 interface IEventCore : ViewModelStoreOwner, LifecycleOwner {
     suspend fun getAssetsPath(): String
-    suspend fun readFile(filename:String): String
+    suspend fun readFile(filename: String): String
     fun loadAssets(text: String)
 }
 
@@ -179,6 +179,36 @@ inline fun <reified T> observeEvent(
         )
 }
 
+inline fun <reified T> IEventCore.observeSyncEvent(
+    dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
+    minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
+    observerName: String,
+    background: Boolean = false,
+    priority: Int = 0,
+    depends: Set<String> = setOf(),
+    noinline block: suspend (T) -> Unit = {},
+) = observeSyncEvent(this, this, dispatcher, minActiveState, observerName, background, priority, depends, block)
+
+inline fun <reified T> observeSyncEvent(
+    scope: ViewModelStoreOwner, lifecycleOwner: LifecycleOwner,
+    dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
+    minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
+    observerName: String,
+    background: Boolean = false,
+    priority: Int = 0,
+    depends: Set<String> = setOf(),
+    noinline block: suspend (T) -> Unit = {},
+) {
+    ViewModelProvider(scope)[EventBusCore::class.java]
+        .observeSyncEvent(
+            lifecycleOwner,
+            T::class.java.name,
+            minActiveState,
+            dispatcher,
+            observerName, background, priority, depends, block
+        )
+}
+
 inline fun <reified T> observeEvent(
     coroutineScope: CoroutineScope,
     isSticky: Boolean = false,
@@ -212,11 +242,20 @@ inline fun <reified T> observeEvent(
 
 class EventBusCore : ViewModel() {
 
+    //同步事件
+    private val syncEvents: HashMap<String, SimpleTaskManager<Any>> = HashMap()
+
     //正常事件
     private val eventFlows: HashMap<String, MutableSharedFlow<Any>> = HashMap()
 
     //粘性事件
     private val stickyEventFlows: HashMap<String, MutableSharedFlow<Any>> = HashMap()
+
+    private fun getSyncFlow(eventName: String): SimpleTaskManager<Any> {
+        return syncEvents[eventName] ?: SimpleTaskManager<Any> { viewModelScope }.also {
+            syncEvents[eventName] = it
+        }
+    }
 
     private fun getEventFlow(eventName: String, isSticky: Boolean): MutableSharedFlow<Any> {
         return if (isSticky) {
@@ -253,6 +292,27 @@ class EventBusCore : ViewModel() {
         }
     }
 
+    fun <T : Any> observeSyncEvent(
+        lifecycleOwner: LifecycleOwner,
+        eventName: String,
+        minState: Lifecycle.State,
+        dispatcher: CoroutineDispatcher,
+        observerName: String,
+        background: Boolean = false,
+        priority: Int = 0,
+        depends: Set<String> = setOf(),
+        block: suspend (T) -> Unit = {},
+    ) {
+        EventBusInitializer.logger?.log(Level.WARNING, "observe Event:$eventName")
+        lifecycleOwner.launchWhenStateAtLeast(minState) {
+            getSyncFlow(eventName).add(observerName, background, priority, depends) {
+                withContext(dispatcher) {
+                    invokeReceived(it, block)
+                }
+            }
+        }
+    }
+
     suspend fun <T : Any> observeWithoutLifecycle(
         eventName: String,
         isSticky: Boolean,
@@ -263,6 +323,18 @@ class EventBusCore : ViewModel() {
         }
     }
 
+    fun <T : Any> observeSyncEventWithoutLifecycle(
+        eventName: String,
+        observerName: String,
+        background: Boolean = false,
+        priority: Int = 0,
+        depends: Set<String> = setOf(),
+        block: suspend (T) -> Unit = {},
+    ) {
+        getSyncFlow(eventName).add(observerName, background, priority, depends) {
+            invokeReceived(it, block)
+        }
+    }
 
     fun postEvent(eventName: String, value: Any, timeMillis: Long) {
         EventBusInitializer.logger?.log(Level.WARNING, "post Event:$eventName")
@@ -281,12 +353,7 @@ class EventBusCore : ViewModel() {
     suspend fun postSyncEvent(eventName: String, value: Any, timeMillis: Long) {
         EventBusInitializer.logger?.log(Level.WARNING, "post Event:$eventName")
         delay(timeMillis)
-        listOfNotNull(
-            getEventFlow(eventName, false),
-            getEventFlow(eventName, true)
-        ).forEach { flow ->
-            flow.emit(value)
-        }
+        getSyncFlow(eventName).start(value)
     }
 
 

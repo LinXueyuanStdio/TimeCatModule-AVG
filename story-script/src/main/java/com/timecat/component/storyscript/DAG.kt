@@ -1,18 +1,12 @@
 package com.timecat.component.storyscript
 
-import android.app.ActivityManager
 import android.app.Application
-import android.content.Context
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
 import android.os.Looper
-import android.os.Process
 import com.timecat.component.commonsdk.utils.override.LogUtil
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.system.measureTimeMillis
 
 /**
@@ -22,25 +16,28 @@ import kotlin.system.measureTimeMillis
  * @description null
  * @usage null
  */
-const val PKG = "com.timecat.component"
-
 interface InitTask {
     suspend fun execute(app: Application)
 }
 
-class Task(
+class Task<T>(
     val name: String,
     val background: Boolean = false,    // 是否在工作线程执行任务 background ? Main : IO
     val priority: Int = 0,              // 进程运行的优先级，值小的先执行
     val depends: Set<String> = setOf(), // 依赖的任务列表
-    val block: suspend () -> Unit = {},
+    val block: suspend (T) -> Unit = {},
 ) {
-    val children: MutableSet<Task> = mutableSetOf()
+    val children: MutableSet<Task<T>> = mutableSetOf()
 }
 
-open class SimpleTaskList {
-    internal val items: ArrayList<Task> = ArrayList()
-    fun add(task: Task) {
+open class SimpleTaskList<T> {
+    internal val items: ArrayList<Task<T>> = ArrayList()
+    fun remove(name: String) {
+        items.removeAll { it.name == name }
+    }
+
+    fun add(task: Task<T>) {
+        remove(task.name)
         items.add(task)
     }
 
@@ -49,103 +46,87 @@ open class SimpleTaskList {
         background: Boolean = false,
         priority: Int = 0,
         depends: Set<String> = setOf(),
-        block: suspend () -> Unit = {},
-    ) {
-        items.add(Task(name, background, priority, depends, block))
-    }
+        block: suspend (T) -> Unit = {},
+    ) = add(Task(name, background, priority, depends, block))
 }
 
-class AppTaskList(private val app: Application) : SimpleTaskList() {
-    private val isDebuggable = app.isDebuggable()
-    private val currentProcessName = app.resolveCurrentProcessName()
-    fun add(moduleName: String, moduleIndex: Int, clazz: Class<out InitTask>, process: String, background: Boolean, debugOnly: Boolean, priority: Short, depends: Set<String>) {
-        val name = "$moduleName:${clazz.simpleName}"
-        val realPriority = (moduleIndex shl 16) or (priority.toInt() + Short.MAX_VALUE)
-        add(name, process, background, debugOnly, realPriority, depends) {
-            clazz.newInstance().execute(app)
-        }
-    }
+class SimpleTaskManager<T>(
+    scope: () -> CoroutineScope = { GlobalScope },
+) : TaskManager<T>(SimpleTaskList(), scope = scope)
 
-    fun add(name: String, process: String = "all", background: Boolean = false, debugOnly: Boolean = false, priority: Int = 0, depends: Set<String> = setOf(), block: suspend () -> Unit) {
-        if (debugOnly && !isDebuggable) {
-            log("===> $name SKIPPED : debug only")
-            return
-        }
-        when (process) {
-            "all" -> {}
-            "main" -> {
-                if (currentProcessName != app.packageName) {
-                    log("===> $name SKIPPED : main process only")
-                    return
-                }
-            }
-            else -> {
-                if (currentProcessName != "${app.packageName}:${process}") {
-                    log("===> $name SKIPPED : process [$currentProcessName] [${app.packageName}:${process}] only")
-                    return
-                }
-            }
-        }
-        add(name, background, priority, depends, block)
-    }
-}
-
-class TaskManager(
-    private val taskList: SimpleTaskList,
+open class TaskManager<T>(
+    private val taskList: SimpleTaskList<T>,
     triggers: Set<String> = setOf(),
-    val scope: CoroutineScope = GlobalScope,
+    val scope: () -> CoroutineScope = { GlobalScope },
 ) {
-
+    val mutex = Mutex()
     private val done: MutableSet<String> = mutableSetOf()
-    private val triggerMap: Map<String, Task> = triggers.map { it to Task(it) }.toMap()
+    private val triggerMap: Map<String, Task<T>> = triggers.map { it to Task<T>(it) }.toMap()
 
-    suspend fun start() {
+    //region taskList
+    fun add(task: Task<T>) = taskList.add(task)
+    fun add(
+        name: String,
+        background: Boolean = false,
+        priority: Int = 0,
+        depends: Set<String> = setOf(),
+        block: suspend (T) -> Unit = {},
+    ) = taskList.add(name, background, priority, depends, block)
+
+    fun remove(name: String) = taskList.remove(name)
+    //endregion
+
+    suspend fun start(event: T) {
         // 根据优先级排序
         taskList.items.sortBy { it.priority }
 
         // 生成任务映射表
         val map = taskList.items.map { it.name to it }.toMap()
 
+        val syncTasks = mutableSetOf<Task<T>>()
+        val aloneTasks = mutableSetOf<Task<T>>()
 
-        val syncTasks = mutableSetOf<Task>()
-        val aloneTasks = mutableSetOf<Task>()
-
-        taskList.items.forEach {
+        taskList.items.forEach { task ->
             when {
                 // 有依赖的任务
-                it.depends.isNotEmpty() -> {
+                task.depends.isNotEmpty() -> {
                     // 检测循环依赖
-                    checkDependence(listOf(it.name), it.depends, map)
+                    checkDependence(listOf(task.name), task.depends, map)
                     // 明确任务依赖关系
-                    it.depends.forEach { taskName ->
+                    task.depends.forEach { taskName ->
                         val item = triggerMap[taskName] ?: map[taskName] ?: throw Throwable("Cannot find dependence $taskName ")
-                        item.children.add(it)
+                        item.children.add(task)
                     }
                 }
                 // 无依赖的异步任务
-                it.background -> aloneTasks.add(it)
+                task.background -> aloneTasks.add(task)
                 // 无依赖的同步任务，在主线程执行
-                else -> syncTasks.add(it)
+                else -> syncTasks.add(task)
             }
         }
 
         // 无依赖的异步任务，在子线程并行执行
         aloneTasks.forEach {
-            flowOf(it).onEach(this::execute).launchIn(scope)
+            flowOf(it).onEach {
+                this.execute(it, event)
+            }.launchIn(scope())
         }
 
         // 无依赖的同步任务，在主线程顺序执行
         if (Looper.getMainLooper() === Looper.myLooper()) {
-            syncTasks.forEach {
-                execute(it)
+            println("is main")
+            for (task in syncTasks) {
+                execute(task, event)
             }
+//            syncTasks.asFlow().onEach(this::execute)
         } else {
-            syncTasks.asFlow().flowOn(Dispatchers.Main).onEach(this::execute).launchIn(scope)
+            syncTasks.asFlow().flowOn(Dispatchers.Main).onEach {
+                this.execute(it, event)
+            }.launchIn(scope())
         }
     }
 
-    private fun checkDependence(path: List<String>, depends: Set<String>, map: Map<String, Task>) {
-
+    private fun checkDependence(path: List<String>, depends: Set<String>, map: Map<String, Task<T>>) {
         depends.forEach {
             if (path.contains(it)) {
                 throw Throwable("Recycle dependence: $path => $it")
@@ -156,17 +137,13 @@ class TaskManager(
         }
     }
 
-    fun finish(name: String) {
-        triggerMap[name]?.let {
-            finish(name, it.children)
-        }
-    }
-
-    private suspend fun execute(task: Task) {
-
+    /**
+     * 同步执行一个任务及其依赖
+     */
+    private suspend fun execute(task: Task<T>, event: T) {
         val time = measureTimeMillis {
             try {
-                task.block()
+                task.block(event)
             } catch (e: Exception) {
                 log("===> ${task.name} ERROR : $e")
                 e.printStackTrace()
@@ -174,98 +151,35 @@ class TaskManager(
         }
         log("===> ${task.name} DONE : ${time}ms")
 
-        finish(task.name, task.children)
+        finish(task.name, task.children, event)
     }
 
-
-    private fun finish(name: String, children: MutableSet<Task>) = synchronized(done) {
-        done.add(name)
-        children.filter { done.containsAll(it.depends) }.forEach {
-            val flowOn = if (it.background) Dispatchers.Default else Dispatchers.Main
-            flowOf(it).flowOn(flowOn).onEach(this::execute).launchIn(scope)
+    //    val poolA = newSingleThreadContext("A")
+//    val poolB = newSingleThreadContext("B")
+    private suspend fun finish(name: String, children: MutableSet<Task<T>>, event: T) {
+        mutex.withLock(done) {
+            done.add(name)
+        }
+        val childTasks = children.filter { done.containsAll(it.depends) }
+        coroutineScope {
+            childTasks.map { task ->
+                val flowOn = if (task.background) Dispatchers.Default else Dispatchers.Main
+//                val flowOn = if (task.background) poolA else poolB
+                async(flowOn) {
+                    execute(task, event)
+                }
+            }.awaitAll()
         }
     }
-}
 
-object InitManager {
-
-    var compliance: Boolean = false
-        set(value) {
-            if (value && !field) {
-                field = true
-                complianceRunnable?.run()
-                complianceRunnable = null
-            }
-        }
-
-    private var complianceRunnable: Runnable? = null
-
-    fun init(app: Application) {
-        val modules = app.meta("modules") ?: ""
-        init(app, modules.split(",").toTypedArray())
-    }
-
-    fun init(app: Application, modules: Array<String>) {
-
-        val trigger = ":compliance"
-        val taskList = AppTaskList(app)
-        val manager = TaskManager(taskList, setOf(trigger))
-
-        modules.map { it.replace("[^0-9a-zA-Z_]+".toRegex(), "") }.forEachIndexed { index, it ->
-            try {
-                val loaderClass = Class.forName("$PKG.generated.InitLoader_$it")
-                val loader = loaderClass.newInstance()
-                loaderClass.getMethod("load", AppTaskList::class.java, Int::class.java).invoke(loader, taskList, index)
-            } catch (e: ClassNotFoundException) {
-                log("There is no Loader in module: $it.")
-            } catch (e: Throwable) {
-                log(e.message!!)
-                e.printStackTrace()
-            }
-        }
-
-        val sp = app.getSharedPreferences("${app.packageName}-$trigger", Context.MODE_PRIVATE)
-        compliance = sp.getBoolean(trigger, false)
-        if (compliance) {
-            manager.finish(trigger)
-        } else {
-            complianceRunnable = Runnable {
-                manager.finish(trigger)
-                sp.edit().putBoolean(trigger, true).apply()
-            }
-        }
-        GlobalScope.launch {
-            manager.start()
+    suspend fun finish(name: String, event: T) {
+        triggerMap[name]?.let {
+            finish(name, it.children, event)
         }
     }
 }
 
 internal fun log(message: String) {
-    LogUtil.d(message);
-}
-
-internal fun Context.meta(key: String): String? {
-    try {
-        return packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA).metaData?.getString(key)
-    } catch (e: PackageManager.NameNotFoundException) {
-        e.printStackTrace()
-    }
-    return null
-}
-
-internal fun Context.isDebuggable(): Boolean = try {
-    applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
-} catch (e: Exception) {
-    e.printStackTrace()
-    false
-}
-
-internal fun Context.resolveCurrentProcessName(): String? {
-    val pid = Process.myPid()
-    (getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).runningAppProcesses?.forEach {
-        if (it.pid == pid) {
-            return it.processName
-        }
-    }
-    return null
+    println(message)
+    LogUtil.d(message)
 }
