@@ -13,8 +13,11 @@ class StoryPlayer(
 
 ) {
     private var storyView: StoryView? = null
-    suspend fun postSyncCommand(command: StoryCommand) {
-
+    suspend fun postSyncCommand(storyCommand: StoryCommand) {
+        val (command, flags, params) = storyCommand
+        when(command) {
+            else->{}
+        }
     }
 
     fun bindView(storyView: StoryView) {

@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelStore
+import com.google.android.material.chip.Chip
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.kuaishou.akdanmaku.DanmakuConfig
@@ -23,6 +24,8 @@ import com.timecat.component.storyscript.IEventCore
 import com.timecat.component.storyscript.Script
 import com.timecat.component.storyscript.ScriptEvent
 import com.timecat.component.storyscript.postEvent
+import com.timecat.layout.ui.business.form.HorizontalContainer
+import com.timecat.layout.ui.layout.*
 import com.timecat.middle.setting.BaseSettingActivity
 import com.timecat.module.vge.R
 import com.timecat.module.vge.page.story.StoryPlayer
@@ -131,6 +134,36 @@ class StoryActivity : BaseSettingActivity() {
             Story(this, core, storyPlayer),
         ).forEach { it.init() }
 
+        val skip = Chip(this).apply {
+            text = "跳过"
+            setShakelessClickListener {
+                core.postEvent(ScriptEvent.Mode("skip"))
+            }
+        }
+        val auto = Chip(this).apply {
+            text = "自动"
+            setShakelessClickListener {
+                core.postEvent(ScriptEvent.Mode("auto"))
+            }
+        }
+        val load = Chip(this).apply {
+            text = "加载"
+            setShakelessClickListener {
+                core.postEvent(ScriptEvent.Load("scripts/1", true))
+            }
+        }
+        container.HorizontalScrollView {
+            layout_width = match_parent
+            layout_height = 54.dp
+            HorizontalContainer {
+                layout_width = 0
+                layout_height = 54.dp
+                addView(load)
+                addView(skip)
+                addView(auto)
+            }
+        }
+
         val storyScript = """
             [bg file='chapters/1/1_bg_pre.png']
         
@@ -173,8 +206,9 @@ class StoryActivity : BaseSettingActivity() {
 //            container.Body("${i}")
 //        }
 
-        core.postEvent(ScriptEvent.Init, 1*1000)
-        core.postEvent(ScriptEvent.Load("scripts/1", true), 3 * 1000)
+        container.post {
+            core.postEvent(ScriptEvent.Init)
+        }
     }
 
     override fun onResume() {

@@ -1,12 +1,10 @@
 package com.timecat.module.vge.page.story
 
-import android.annotation.TargetApi
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.opengl.GLSurfaceView
-import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.util.AttributeSet
@@ -128,7 +126,7 @@ class StoryView : View, InputProcessor {
             LogUtil.se("buildGDX")
         }
         particleEffectView = BalloonParticleEffectView()
-        val effectview = CreateGLAlpha(particleEffectView!!)
+        val effectview = createGLAlpha(particleEffectView!!)
         mContainer = m_viewRooter.findViewById<View>(R.id.container) as InterceptableViewGroup
         mContainer.addView(effectview)
         mContainer.setIntercept(true)
@@ -182,8 +180,7 @@ class StoryView : View, InputProcessor {
         buildGDX()
     }
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private fun CreateGLAlpha(application: ApplicationListener): View {
+    private fun createGLAlpha(application: ApplicationListener): View {
         if (openDEBUGLog) {
             LogUtil.se("CreateGLAlpha")
         }
