@@ -61,6 +61,8 @@ class SceneView : ConstraintLayout, ICoreView {
             margin_start = 10
             margin_end = 10
 
+            padding = 10
+
             bottom_toBottomOf = parent_id
 
             beGone()
@@ -96,19 +98,14 @@ class SceneView : ConstraintLayout, ICoreView {
             val flags = it.flags
             val params = it.params
             when (command) {
-                "text" -> {
-                    if ("show" in flags) {
-                        if ("bg" in params) {
-                            val filename = params["bg"] as? String ?: ""
-                            val bg = context.getBitmapDrawable(core.getAssetsPath() + filename)
-                            bg?.let {
-                                withContext(Dispatchers.Main) {
-                                    textWindow.bg = it
-                                }
+                "router" -> {
+                    if ("push" in flags) {
+                        if ("path" in params) {
+                            var filename = params["path"] as? String ?: ""
+                            if (filename.startsWith("/")) {
+                                filename = filename.substring(1)
                             }
-                            withContext(Dispatchers.Main) {
-                                textWindow.beVisible()
-                            }
+                            core.postEvent(ScriptEvent.Load(filename, true))
                         }
                     }
                 }

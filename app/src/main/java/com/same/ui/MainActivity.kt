@@ -13,7 +13,7 @@ import com.timecat.component.commonsdk.utils.override.LogUtil
 import com.timecat.component.storyscript.EventBusInitializer
 import com.timecat.component.storyscript.IScript
 import com.timecat.component.storyscript.StoryScript
-import com.timecat.module.vge.page.StoryActivity
+import com.timecat.module.vge.page.StoryComposeActivity
 import com.timecat.module.vge.page.VgeActivity
 import com.xiaojinzi.component.impl.*
 
@@ -62,7 +62,7 @@ class MainActivity : Activity() {
             startActivity(Intent(this, VgeActivity::class.java))
         })
         linearLayout.addView(createButton("StoryActivity") {
-            startActivity(Intent(this, StoryActivity::class.java))
+            startActivity(Intent(this, StoryComposeActivity::class.java))
         })
         // 2021-11-18 22:51:32.889 5244-5244/com.timecat.fake.avg E/TimeCat: ┆ Thread:main - 2 - @lxy  - MainActivity.onCreate$lambda-0 (MainActivity.kt:26)
         // ┆ {CURRENTBLOCK={data=[{flags=[tag], type=content, params={}, command=name}], done=false, currentLine=0.0}, BLOCKSTACK=[]}

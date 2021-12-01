@@ -7,7 +7,13 @@
             android:name=".page.VgeActivity"
             android:exported="true" />
         <activity
-            android:name=".page.StoryActivity"
+            android:name=".page.StoryComposeActivity"
+            android:exported="true" />
+        <activity
+            android:name=".page.StoryGdxActivity"
+            android:exported="true" />
+        <activity
+            android:name=".page.StoryViewActivity"
             android:exported="true" />
     </application>
 

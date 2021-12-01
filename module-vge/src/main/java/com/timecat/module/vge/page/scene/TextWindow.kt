@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatTextView
+import com.timecat.component.commonsdk.extension.beVisible
 import com.timecat.component.commonsdk.utils.override.LogUtil
 import com.timecat.component.storyscript.*
 import com.timecat.layout.ui.layout.setShakelessClickListener
@@ -59,6 +60,7 @@ class TextWindow : AppCompatTextView, ICoreView {
         ) {
             LogUtil.se("ScriptEvent.Exec")
             val command = it.command
+            val flags = it.flags
             val params = it.params
             when (command) {
                 "*" -> {
@@ -75,6 +77,22 @@ class TextWindow : AppCompatTextView, ICoreView {
                             setShakelessClickListener {
                                 setOnClickListener(null)
                                 con.resume(true)
+                            }
+                        }
+                    }
+                }
+                "text" -> {
+                    if ("show" in flags) {
+                        if ("bg" in params) {
+                            val filename = params["bg"] as? String ?: ""
+                            val bgDrawable = context.getBitmapDrawable(core.getAssetsPath() + filename)
+                            bgDrawable?.let {
+                                withContext(Dispatchers.Main) {
+                                    bg = it
+                                }
+                            }
+                            withContext(Dispatchers.Main) {
+                                beVisible()
                             }
                         }
                     }

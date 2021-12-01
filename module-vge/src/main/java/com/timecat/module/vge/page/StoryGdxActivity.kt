@@ -41,10 +41,10 @@ import com.timecat.module.vge.plugins.Story
  * @author 林学渊
  * @email linxy59@mail2.sysu.edu.cn
  * @date 2021/11/28
- * @description null
+ * @description 游戏引擎实现渲染
  * @usage null
  */
-class StoryActivity : BaseSettingActivity() {
+class StoryGdxActivity : BaseSettingActivity() {
     override fun title(): String = "故事"
     val core = object : IEventCore {
         override suspend fun getAssetsPath(): String {
@@ -64,11 +64,11 @@ class StoryActivity : BaseSettingActivity() {
         }
 
         override fun getViewModelStore(): ViewModelStore {
-            return this@StoryActivity.viewModelStore
+            return this@StoryGdxActivity.viewModelStore
         }
 
         override fun getLifecycle(): Lifecycle {
-            return this@StoryActivity.lifecycle
+            return this@StoryGdxActivity.lifecycle
         }
     }
 
@@ -86,7 +86,6 @@ class StoryActivity : BaseSettingActivity() {
 
     private lateinit var danmakuView: DanmakuView
     private lateinit var storyView: StoryView
-    private lateinit var sceneView: SceneView
 
     private val mainHandler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
@@ -124,16 +123,10 @@ class StoryActivity : BaseSettingActivity() {
         container.addView(danmakuView)
         storyView = StoryView(this).apply {
             layout_width = match_parent
-            layout_height = 168
+            layout_height = 204
         }
         storyView.init(this)
         container.addView(storyView)
-        sceneView = SceneView(this).apply {
-            layout_width = match_parent
-            layout_height = 168
-        }
-        sceneView.init(this)
-        container.addView(sceneView)
 
         danmakuPlayer = DanmakuPlayer(renderer).also {
             it.bindView(danmakuView)
@@ -144,15 +137,11 @@ class StoryActivity : BaseSettingActivity() {
         val storyPlayer = StoryPlayer(this, core).also {
             it.bindView(storyView)
         }
-        val scenePlayer = ScenePlayer(this, core).also {
-            it.bindView(sceneView)
-        }
         listOf(
             Script(this, core),
             Show(this, core, container),
             Danmaku(this, core, danmakuPlayer),
             Story(this, core, storyPlayer),
-            Scene(this, core, scenePlayer),
         ).forEach { it.init() }
 
         val skip = Chip(this).apply {
@@ -184,48 +173,6 @@ class StoryActivity : BaseSettingActivity() {
                 addView(auto)
             }
         }
-
-        val storyScript = """
-            [bg file='chapters/1/1_bg_pre.png']
-        
-            [text show]
-            I should believe that even the most impossible dreams might come true.[r]
-            Henryk Sienkiewicz[r]
-            [text set italic=true]
-            Quo Vadis[p]
-            [text set italic=false]
-        
-            [bg file='chapters/1/1_bg_pre.png' pretrans]
-            [bg file='chapters/1/1_bg_bw.png' trans method='ripple']
-        
-            Water...[p]
-            Dark...[p]
-            Confusion...[p]
-        
-            【Self】
-            Where am I?[p]
-            ...[p]
-            Seems that i have been in deep water.[p]
-            Why...[p]
-            Why the heck am I here?[p]
-            【】
-        
-            [bg file='chapters/1/1_bg_bw.png' pretrans]
-            [bg file='chapters/1/1_bg_down.png' trans method='crossfade']
-        
-            oh![p]
-        
-            [router push path='/story/2']
-        """
-
-//        val jsonArray = story.parser.parse2JSONArray(storyScript)
-//        if (jsonArray == null) {
-//            container.Body("error when parse.")
-//            return
-//        }
-//        for (i in jsonArray) {
-//            container.Body("${i}")
-//        }
 
         container.post {
             core.postEvent(ScriptEvent.Init)
