@@ -33,7 +33,7 @@ class Danmaku(
     override fun init() {
         core.observeSyncEvent<ScriptEvent.Exec>(
             Dispatchers.Main,
-            observerName = "弹幕",
+            observerName = this::class.java.name,
             background = true
         ) {
             LogUtil.se("ScriptEvent.Exec")
@@ -50,14 +50,14 @@ class Danmaku(
                 9
             )
             val item = danmakuPlayer.obtainItem(danmaku)
-            val sequenceAction = Actions.sequence(
-                Actions.rotateBy(360f, 1000L),
-                Actions.scaleTo(1.5f, 1.5f, 500L),
-                Actions.scaleTo(0.8f, 0.8f, 300L)
-            )
+//            val sequenceAction = Actions.sequence(
+//                Actions.rotateBy(360f, 1000L),
+//                Actions.scaleTo(1.5f, 1.5f, 500L),
+//                Actions.scaleTo(0.8f, 0.8f, 300L)
+//            )
             item.addAction(
-                Actions.moveBy(0f, 300f, 1735L),
-                sequenceAction,
+//                Actions.moveBy(0f, 300f, 1735L),
+//                sequenceAction,
                 Actions.sequence(Actions.fadeOut(500L), Actions.fadeIn(300L))
             )
             danmakuPlayer.send(item)

@@ -24,7 +24,7 @@ class Story(
     override fun init() {
         core.observeSyncEvent<ScriptEvent.Exec>(
             Dispatchers.Main,
-            observerName = "story",
+            observerName = this::class.java.name,
             background = false
         ) {
             LogUtil.se("ScriptEvent.Exec")

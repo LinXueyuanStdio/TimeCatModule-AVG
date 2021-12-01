@@ -50,9 +50,7 @@ class BgView : View, ICoreView {
                 "bg" -> {
                     val filename = params.get("file") as? String ?: return@observeSyncEvent
                     try {
-                        val inputStream = context.assets.open(core.getAssetsPath() + filename)
-                        val bitmapDrawable = BitmapDrawable.createFromStream(inputStream, filename)
-                        inputStream.close()
+                        val bitmapDrawable = context.getBitmapDrawable(core.getAssetsPath() + filename)
                         withContext(Dispatchers.Main) {
                             background = bitmapDrawable
                         }

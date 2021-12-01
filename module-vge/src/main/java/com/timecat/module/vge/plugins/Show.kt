@@ -31,7 +31,7 @@ class Show(
     override fun init() {
         core.observeSyncEvent<ScriptEvent.Exec>(
             Dispatchers.Main,
-            observerName = "show",
+            observerName = this::class.java.name,
             background = false
         ) {
             LogUtil.se("ScriptEvent.Exec")
