@@ -58,7 +58,7 @@ class Danmaku(
             item.addAction(
 //                Actions.moveBy(0f, 300f, 1735L),
 //                sequenceAction,
-                Actions.sequence(Actions.fadeOut(500L), Actions.fadeIn(300L))
+                Actions.sequence(Actions.fadeOut(100L), Actions.fadeIn(100L))
             )
             danmakuPlayer.send(item)
         }

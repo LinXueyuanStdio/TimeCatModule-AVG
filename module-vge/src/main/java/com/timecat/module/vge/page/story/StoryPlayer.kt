@@ -1,13 +1,12 @@
 package com.timecat.module.vge.page.story
 
 import android.content.Context
-import android.graphics.drawable.BitmapDrawable
 import com.timecat.component.storyscript.IEventCore
+import com.timecat.component.storyscript.getBitmapDrawable
 import com.timecat.layout.ui.layout.setShakelessClickListener
 import com.timecat.module.vge.plugins.StoryCommand
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -28,15 +27,9 @@ class StoryPlayer(
         when (command) {
             "bg" -> {
                 val filename = params.get("file") as? String ?: return
-                try {
-                    val inputStream = context.assets.open(core.getAssetsPath() + filename)
-                    val bitmapDrawable = BitmapDrawable.createFromStream(inputStream, filename)
-                    inputStream.close()
-                    withContext(Dispatchers.Main) {
-                        storyView?.background = bitmapDrawable
-                    }
-                } catch (ex: IOException) {
-                    ex.printStackTrace()
+                val bitmapDrawable = context.getBitmapDrawable(core.getAssetsPath() + filename)
+                withContext(Dispatchers.Main) {
+                    storyView?.background = bitmapDrawable
                 }
             }
             "p" -> {
