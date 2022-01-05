@@ -15,6 +15,9 @@
         <activity
             android:name=".page.StoryViewActivity"
             android:exported="true" />
+        <activity
+            android:name=".core.AndroidLauncher"
+            android:exported="true" />
     </application>
 
 </manifest>

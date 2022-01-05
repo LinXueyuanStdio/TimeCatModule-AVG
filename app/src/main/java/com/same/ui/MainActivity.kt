@@ -13,6 +13,7 @@ import com.timecat.component.commonsdk.utils.override.LogUtil
 import com.timecat.component.storyscript.EventBusInitializer
 import com.timecat.component.storyscript.IScript
 import com.timecat.component.storyscript.StoryScript
+import com.timecat.module.vge.core.AndroidLauncher
 import com.timecat.module.vge.page.StoryComposeActivity
 import com.timecat.module.vge.page.StoryGdxActivity
 import com.timecat.module.vge.page.StoryViewActivity
@@ -71,6 +72,9 @@ class MainActivity : Activity() {
         })
         linearLayout.addView(createButton("StoryGdxActivity") {
             startActivity(Intent(this, StoryGdxActivity::class.java))
+        })
+        linearLayout.addView(createButton("PokemonGdxActivity") {
+            startActivity(Intent(this, AndroidLauncher::class.java))
         })
         // 2021-11-18 22:51:32.889 5244-5244/com.timecat.fake.avg E/TimeCat: ┆ Thread:main - 2 - @lxy  - MainActivity.onCreate$lambda-0 (MainActivity.kt:26)
         // ┆ {CURRENTBLOCK={data=[{flags=[tag], type=content, params={}, command=name}], done=false, currentLine=0.0}, BLOCKSTACK=[]}
