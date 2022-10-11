@@ -1,4 +1,4 @@
-package com.timecat.module.vge.page.scene
+package com.timecat.module.vge.page.compose
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween

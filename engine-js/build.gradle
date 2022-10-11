@@ -68,7 +68,7 @@ android {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
-    api 'androidx.appcompat:appcompat:1.2.0'
+    api 'androidx.appcompat:appcompat:1.5.1'
     api 'com.facebook:jni:1.0.0'
 }
 

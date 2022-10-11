@@ -31,7 +31,7 @@ dependencies {
     // LibGdx-Ashley(ECS)
     api "com.badlogicgames.ashley:ashley:$ashleyVersion"
 
-    api 'androidx.core:core-ktx:1.6.0'
+    api 'androidx.core:core-ktx:1.9.0'
 }
 
 // called every time gradle gets executed, takes the native dependencies of

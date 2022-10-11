@@ -1,0 +1,6 @@
+{
+    "name": "Pokémon GBA",
+    "flavours": ["firered", "leafgreen"],
+    "characters": ["becky.png"],
+    "start_map": ["Pallet Town", 10, 8]
+}
