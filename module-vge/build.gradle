@@ -20,8 +20,8 @@ configurations {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    api rootProject.ext.timecat["component-CommonStatic"]
-    api rootProject.ext.timecat["middle-setting"]
+    api rootProject.ext.timecat["identity-readonly"]
+    api rootProject.ext.timecat["middle-form"]
     api rootProject.ext.timecat["middle-block"]
 
     def compose_version = '1.2.1'
